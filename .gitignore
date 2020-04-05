@@ -5,3 +5,13 @@
 # MacOS Garbage
 .DS_STORE
 
+# Ignore object files
+build
+
+# Ignore dist files
+bin/*
+
+# Ignore generated libraries
+lib/*.so
+lib/*.a
+

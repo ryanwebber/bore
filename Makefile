@@ -1,7 +1,7 @@
 
 NAME := bore
 
-CC := cc
+CC := gcc
 
 SRCDIR := src
 BUILDDIR := build
@@ -10,8 +10,8 @@ TARGET := bin/$(NAME)
 SRCEXT := c
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -g -Wall
-LIB := -llua 
+CFLAGS := -g # -Wall
+LIB := -llua -lm -ldl 
 INC := -I include
 
 all: $(TARGET)
