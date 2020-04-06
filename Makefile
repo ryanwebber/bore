@@ -1,18 +1,20 @@
 
 NAME := bore
 
-CC := gcc
+CC := g++
 
 SRCDIR := src
 BUILDDIR := build
+INCDIR := include
 TARGET := bin/$(NAME)
  
-SRCEXT := c
+SRCEXT := cpp
+HEXT := h
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -g # -Wall
+CFLAGS := -g -std=c++11 -Wall 
 LIB := -llua -lm -ldl 
-INC := -I include
+INC := -I $(INCDIR)
 
 all: $(TARGET)
 
