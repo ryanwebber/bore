@@ -12,7 +12,7 @@ SRCEXT := cpp
 HEXT := h
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o))
-CFLAGS := -g -std=c++11 -Wall 
+CFLAGS := -g -std=c++11 -Wall
 LIB := -llua -lm -ldl 
 INC := -I $(INCDIR)
 

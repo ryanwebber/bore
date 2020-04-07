@@ -9,7 +9,7 @@ Vagrant.configure("2") do |config|
   #   vb.memory = "1024"
   # end
 
-  config.vm.synced_folder ".", "/home/vagrant/src"
+  config.vm.synced_folder ".", "/home/vagrant/bore"
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.provision "shell", inline: <<-SHELL
