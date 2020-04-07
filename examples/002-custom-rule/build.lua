@@ -21,5 +21,8 @@ M.targets.main = copy {
     to = "output.txt"
 }
 
+-- REMOVE ME
+print(M.targets.main.cmds[1])
+
 return M
 

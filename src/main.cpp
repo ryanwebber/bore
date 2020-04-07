@@ -12,7 +12,13 @@ int main(int argc, const char* argv[]) {
 
     LuaRuntime runtime;
     runtime.load();
-    runtime.evaluateScript("print(\"Hello world!\")");
-    runtime.evaluateFile(argv[1]);
+
+    for (int i = 1; i < argc; i++) {
+        int status = runtime.evaluateFile(argv[i]);
+        if (status) {
+            std::cout << "Whoops" << std::endl;
+            break;
+        }
+    }
 }
 
