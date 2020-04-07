@@ -1,12 +1,29 @@
 
 -- Define our own copy rule
 defnrule("copy", {
+    args = {
+        from = {
+            type = { "string", "table" },
+            required = true,
+        },
+        to = {
+            type = "string",
+            required = true
+        }
+    },
     generator = function (args)
+
+        local outs = args.to
+        local ins = args.from
+        if type(ins) == "string" then
+            ins = { ins }
+        end
+
         return rule {
-            ins = args.from,
-            outs = args.to,
+            ins = ins,
+            outs = outs,
             cmds = {
-                "cp ${ins} ${outs}"
+                string.format("cp %s %s", table.concat(ins, " "), outs)
             }
         }
     end
