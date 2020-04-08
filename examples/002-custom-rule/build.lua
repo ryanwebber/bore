@@ -1,29 +1,28 @@
 
 -- Define our own copy rule
 defnrule("copy", {
-    args = {
-        from = {
-            type = { "string", "table" },
-            required = true,
-        },
-        to = {
-            type = "string",
-            required = true
-        }
-    },
-    generator = function (args)
-
-        local outs = args.to
-        local ins = args.from
-        if type(ins) == "string" then
-            ins = { ins }
+    validator = function(args)
+        if type(args.from) == "string" then
+            args.from = { args.from }
         end
 
+        return bore.validate(args, {
+            from = {
+                type = "table",
+                required = true,
+            },
+            to = {
+                type = "string",
+                required = true
+            }
+        })
+    end,
+    generator = function (args)
         return rule {
-            ins = ins,
-            outs = outs,
+            ins = args.from,
+            outs = args.to,
             cmds = {
-                string.format("cp %s %s", table.concat(ins, " "), outs)
+                string.format("cp %s %s", table.concat(args.from, " "), args.to)
             }
         }
     end
