@@ -33,10 +33,12 @@ end
 -- of the callers caller. (ex. if this is used in a function a user calls, then it throws
 -- the error back at their call site)
 local assert = function(fn)
-    local _, err = pcall(fn)
-    if err then
-        error(err, 3)
+    local success, results  = pcall(fn)
+    if not success then
+        error(results, 3)
     end
+
+    return results
 end
 
 local assert_type = function(var, vtype, msg)
@@ -51,11 +53,18 @@ local assert_number =    function(var, msg) assert_type(var, "number", msg)   en
 local assert_function =  function(var, msg) assert_type(var, "function", msg) end
 
 local validate = function(var, spec)
+    local t = {}
     for pname, pspec in pairs(spec) do
-        if pspec.required == true and var[pname] == nil then
+        if var[pname] == nil and pspec.required == true then
             fatal("Table field '%s' cannot be nil", pname, tostring(var))
+        elseif var[pname] == nil and pspec.default ~= nil then
+            t[pname] = pspec.default
+        else
+            t[pname] = var[pname]
         end
     end
+
+    return t
 end
 
 
@@ -76,12 +85,16 @@ defnrule = function(name, def)
     end)
 
     ruledefs[name] = function(args)
-        assert(function()
+        local validated_args = assert(function()
             assert_table(args, string.format("Arguments to rule '%s' must be a table", name))
-            if type(def.args) == "table" then validate(args, def.args) end
+            if type(def.args) == "table" then
+                return validate(args, def.args)
+            else
+                return args
+            end
         end)
 
-        return def.generator(args)
+        return def.generator(validated_args)
     end
 
     return ruledefs[name]
