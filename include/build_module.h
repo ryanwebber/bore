@@ -3,6 +3,7 @@
 
 #include <map>
 #include <memory>
+#include <filesystem>
 #include <string>
 
 #include "target.h"
@@ -10,7 +11,7 @@
 class BuildModule {
     private:
         std::string name;
-        std::string modulepath;
+        std::filesystem::path modulepath;
         std::map<std::string, std::shared_ptr<Target>> targets;
 
     public:
@@ -18,7 +19,7 @@ class BuildModule {
         ~BuildModule() = default;
 
         std::string getName();
-        std::string getModulePath();
+        std::filesystem::path getModulePath();
 };
 
 #endif

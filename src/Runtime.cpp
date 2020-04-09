@@ -2,6 +2,8 @@
 #include <filesystem>
 #include "runtime.h"
 
+namespace fs = std::filesystem;
+
 Runtime::Runtime() {
     L = luaL_newstate();
     graph = std::make_shared<BuildGraph>();
@@ -24,20 +26,21 @@ bool Runtime::evaluateBuildModule(const std::string& filepath) {
 
     if (err) {
         std::cout << lua_tostring(L, -1) << std::endl;
-        return err;
+        return false;
     }
 
     if (!lua_istable(L, -1)) {
         std::cout << "Expected build file to return a module: "
             << filepath << std::endl;
+        return false;
     }
 
     lua_getfield(L, -1, "name");
 
     size_t len;
-    const char* mod_name = lua_tolstring(L, -1, &len);
+    const char* modulename = lua_tolstring(L, -1, &len);
 
-    if (mod_name == NULL) {
+    if (modulename == NULL) {
         std::cerr << "Module must define a name: " << filepath << std::endl;
         return false;
     }
@@ -47,7 +50,9 @@ bool Runtime::evaluateBuildModule(const std::string& filepath) {
         return false;
     }
 
-
+    auto modulepath = fs::path(filepath).parent_path();
+    auto module = std::make_shared<BuildModule>(modulename, modulepath);
+    graph->insertModule(module);
 
     return !err;
 }

@@ -1,5 +1,6 @@
-
 #include "build_module.h"
+
+namespace fs = std::filesystem;
 
 BuildModule::BuildModule(std::string name, std::string modulepath):
         name(name),
@@ -10,7 +11,7 @@ std::string BuildModule::getName() {
     return name;
 }
 
-std::string BuildModule::getModulePath() {
+fs::path BuildModule::getModulePath() {
     return modulepath;
 }
 
