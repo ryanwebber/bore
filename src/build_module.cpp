@@ -19,3 +19,21 @@ fs::path BuildModule::getBuildFilePath() const {
     return buildfilepath;
 }
 
+std::shared_ptr<Target> BuildModule::findTarget(std::string &name) const {
+    if (targets.find(name) == targets.end()) {
+        return NULL;
+    }
+
+    return targets.at(name);
+}
+
+bool BuildModule::addTarget(std::shared_ptr<Target> target) {
+    std::string target_name = target->getName();
+    if (findTarget(target_name) != NULL) {
+        return false;
+    }
+
+    targets[target_name] = target;
+    return true;
+}
+

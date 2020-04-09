@@ -18,7 +18,7 @@ defnrule("copy", {
         })
     end,
     generator = function (args)
-        local x = rule {
+        return rule {
             ins = args.from,
             outs = args.to,
             cmds = {
@@ -27,7 +27,6 @@ defnrule("copy", {
                 "echo yay",
             }
         }
-        return { { x, x, x}, x, {{{{{{x}}}}}}}
     end
 })
 
@@ -41,8 +40,10 @@ M.targets.main = copy {
     to = "output.txt"
 }
 
--- REMOVE ME
--- print(M.targets.main.cmds[1])
+M.targets.main2 = copy {
+    from = { "output.txt", "other.txt" },
+    to = "final.txt"
+}
 
 return M
 

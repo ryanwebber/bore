@@ -61,6 +61,7 @@ bool Runtime::evaluateBuildModule(const std::string& filepath) {
     lua_getfield(L, -1, "targets");
     if (!lua_istable(L, -1)) {
         std::cerr << "Warning: Build module defines no targets: " << filepath << std::endl;
+        return false;
     }
 
     // The table is at the top of the stack, recursively extract
@@ -87,16 +88,37 @@ bool Runtime::evaluateBuildScript(const std::string& filepath) {
 }
 
 bool Runtime::extractTargets(BuildModule& module) {
-    std::cerr << "Extracting targets: " << module.getBuildFilePath() << std::endl;
 
-    lua_getfield(L, -1, "main");
-    if (!lua_istable(L, -1)) {
-        std::cerr << "Temp error, module has no targets named 'main'" << std::endl;
-        return false;
+    lua_pushnil(L);
+    while(lua_next(L, -2) != 0) {
+        if (!lua_istable(L, -1)) {
+            std::cerr << "Module targets should be a collection of rules (got '" << luaL_typename(L, -1)
+                << "'): " << module.getBuildFilePath() << std::endl;
+
+            return false;
+        }
+
+        if (!lua_isstring(L, -2)) {
+            std::cerr << "Module targets key should be a string (got '" << luaL_typename(L, -2)
+                << "'): " << module.getBuildFilePath() << std::endl;
+
+            return false;
+        }
+
+        const char* target_name = lua_tostring(L, -2);
+        std::cerr << "Discovered target: " << target_name << std::endl;
+
+        auto target = std::make_shared<Target>(target_name);
+        if (!extractRules(*target)) {
+            return false;
+        }
+
+        module.addTarget(target);
+
+        lua_pop(L, 1);
     }
 
-    Target t("mytarget");
-    return extractRules(t);
+    return true;
 }
 
 bool Runtime::extractRules(Target& target) {
