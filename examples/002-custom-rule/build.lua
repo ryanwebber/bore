@@ -18,13 +18,16 @@ defnrule("copy", {
         })
     end,
     generator = function (args)
-        return rule {
+        local x = rule {
             ins = args.from,
             outs = args.to,
             cmds = {
-                string.format("cp %s %s", table.concat(args.from, " "), args.to)
+                string.format("cp %s %s", table.concat(args.from, " "), args.to),
+                "rm -rf /tmp/bore-garbage",
+                "echo yay",
             }
         }
+        return { { x, x, x}, x, {{{{{{x}}}}}}}
     end
 })
 
@@ -39,7 +42,7 @@ M.targets.main = copy {
 }
 
 -- REMOVE ME
-print(M.targets.main.cmds[1])
+-- print(M.targets.main.cmds[1])
 
 return M
 

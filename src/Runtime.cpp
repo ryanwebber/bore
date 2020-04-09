@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <filesystem>
 #include "runtime.h"
@@ -25,13 +26,12 @@ bool Runtime::evaluateBuildModule(const std::string& filepath) {
     int err = luaL_loadfile(L, filepath.c_str()) || lua_pcall(L, 0, 1, 0);
 
     if (err) {
-        std::cout << lua_tostring(L, -1) << std::endl;
+        std::cerr << lua_tostring(L, -1) << std::endl;
         return false;
     }
 
     if (!lua_istable(L, -1)) {
-        std::cout << "Expected build file to return a module: "
-            << filepath << std::endl;
+        std::cerr << "Expected build file to return a module: " << filepath << std::endl;
         return false;
     }
 
@@ -50,9 +50,25 @@ bool Runtime::evaluateBuildModule(const std::string& filepath) {
         return false;
     }
 
-    auto modulepath = fs::path(filepath).parent_path();
-    auto module = std::make_shared<BuildModule>(modulename, modulepath);
-    graph->insertModule(module);
+    auto module = std::make_shared<BuildModule>(modulename, filepath);
+    if (!graph->insertModule(module)) {
+        std::cerr << "Build module with name '" << modulename << "' already exists: "
+            << filepath << std::endl;
+        return false;
+    }
+
+    lua_pop(L, 1);
+    lua_getfield(L, -1, "targets");
+    if (!lua_istable(L, -1)) {
+        std::cerr << "Warning: Build module defines no targets: " << filepath << std::endl;
+    }
+
+    // The table is at the top of the stack, recursively extract
+    // the returned targets
+    extractTargets(*module);
+
+    // Clear the stack before returning
+    lua_settop(L, 0);
 
     return !err;
 }
@@ -60,12 +76,133 @@ bool Runtime::evaluateBuildModule(const std::string& filepath) {
 bool Runtime::evaluateBuildScript(const std::string& filepath) {
     int status = luaL_dofile(L, filepath.c_str());
     if (status) {
-        std::cout << lua_tostring(L, -1) << std::endl;
+        std::cerr << lua_tostring(L, -1) << std::endl;
         return false;
     }
 
     // Clear the stack before returning
     lua_settop(L, 0);
+
+    return true;
+}
+
+bool Runtime::extractTargets(BuildModule& module) {
+    std::cerr << "Extracting targets: " << module.getBuildFilePath() << std::endl;
+
+    lua_getfield(L, -1, "main");
+    if (!lua_istable(L, -1)) {
+        std::cerr << "Temp error, module has no targets named 'main'" << std::endl;
+        return false;
+    }
+
+    Target t("mytarget");
+    return extractRules(t);
+}
+
+bool Runtime::extractRules(Target& target) {
+    int starttop = lua_gettop(L);
+
+    // TODO: Replace 'rule' rule with userdata, and check metatable
+    // here
+    lua_getfield(L, -1, "ins");
+    lua_getfield(L, -2, "outs");
+    lua_getfield(L, -3, "cmds");
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 3);
+        lua_pushnil(L);
+        while(lua_next(L, -2) != 0) {
+            if (lua_istable(L, -1)) {
+                if (!extractRules(target)) {
+                    return false;
+                }
+            }
+
+            lua_pop(L, 1);
+        }
+
+    } else {
+        if (!lua_istable(L, -1) || lua_rawlen(L, -1) == 0) {
+            std::cerr << "In target '" << target.getName() << "': Rule does not contain any commands"
+                << std::endl;
+
+            return false;
+        }
+
+        auto rule = std::make_shared<Rule>();
+
+        // Adding the commands
+        lua_pushnil(L);  /* first key */
+        while (lua_next(L, -2) != 0) {
+            if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
+                std::cerr << "In target '" << target.getName()
+                    << "': Expected commands to be an array of strings" << std::endl;
+
+                return false;
+            }
+
+            std::cerr << "Command: " << lua_tostring(L, -1) << std::endl;
+            rule->addCommand(lua_tostring(L, -1));
+
+            lua_pop(L, 1);
+        }
+
+        // Pop back to outputs
+        lua_pop(L, 1);
+
+        // Adding the outputs
+        if (lua_isstring(L, -1)) {
+            std::cerr << "Output: " << lua_tostring(L, -1) << std::endl;
+            rule->addOutput(lua_tostring(L, -1));
+        } else if (lua_istable(L, -1) && lua_rawlen(L, -1) > 0) {
+            lua_pushnil(L);  /* first key */
+            while (lua_next(L, -2) != 0) {
+                if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
+                    std::cerr << "In target '" << target.getName()
+                        << "': Expected outputs to be an array of strings" << std::endl;
+
+                    return false;
+                }
+
+                std::cerr << "Output: " << lua_tostring(L, -1) << std::endl;
+                rule->addOutput(lua_tostring(L, -1));
+
+                lua_pop(L, 1);
+            }
+        }
+
+        // Pop back to inputs
+        lua_pop(L, 1);
+
+        // Adding the inputs
+        if (lua_isstring(L, -1)) {
+            std::cerr << "Input: " << lua_tostring(L, -1) << std::endl;
+            rule->addOutput(lua_tostring(L, -1));
+        } else if (lua_istable(L, -1) && lua_rawlen(L, -1) > 0) {
+            lua_pushnil(L);  /* first key */
+            while (lua_next(L, -2) != 0) {
+                if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
+                    std::cerr << "In target '" << target.getName()
+                        << "': Expected inputs to be an array of strings" << std::endl;
+
+                    return false;
+                }
+
+                std::cerr << "Input: " << lua_tostring(L, -1) << std::endl;
+                rule->addInput(lua_tostring(L, -1));
+
+                lua_pop(L, 1);
+            }
+        }
+
+        target.addRule(rule);
+
+        // Remember to do this one last time
+        lua_pop(L, 1);
+
+    }
+
+    int endtop = lua_gettop(L);
+    assert(endtop == starttop);
 
     return true;
 }

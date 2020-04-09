@@ -1,7 +1,15 @@
 
 #include "build_graph.h"
 
-bool BuildGraph::hasModule(const std::string &name) {
+std::shared_ptr<BuildModule> BuildGraph::lookupModule(const std::string &name) const {
+    if (hasModule(name)) {
+        return modules.at(name);
+    } else {
+        return NULL;
+    }
+}
+
+bool BuildGraph::hasModule(const std::string &name) const {
     return modules.find(name) != modules.end();
 }
 
@@ -12,14 +20,6 @@ bool BuildGraph::insertModule(const std::shared_ptr<BuildModule> module) {
 
     modules[module->getName()] = module;
 
-    return NULL;
-}
-
-std::shared_ptr<BuildModule> BuildGraph::lookupModule(const std::string &name) {
-    if (hasModule(name)) {
-        return modules[name];
-    } else {
-        return NULL;
-    }
+    return true;
 }
 
