@@ -1,24 +1,26 @@
 #include <iostream>
 #include <string>
 
-#include "LuaRuntime.h"
+#include "Runtime.h"
 
 int main(int argc, const char* argv[]) {
 
-    if (argc < 2) {
-        std::cout << "No files provided" << std::endl;
+    if (argc < 3) {
+        std::cerr << "No files provided" << std::endl;
         return 1;
     }
 
-    LuaRuntime runtime;
-    runtime.load();
+    Runtime runtime;
+    if (!runtime.load()) {
+        return 2;
+    }
 
-    for (int i = 1; i < argc; i++) {
-        int status = runtime.evaluateFile(argv[i]);
-        if (status) {
-            std::cout << "Whoops" << std::endl;
-            break;
-        }
+    if (!runtime.evaluateBuildScript(argv[1])) {
+        return 3;
+    }
+
+    if (!runtime.evaluateBuildModule(argv[2])) {
+        return 4;
     }
 }
 
