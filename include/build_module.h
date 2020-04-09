@@ -1,20 +1,20 @@
-#ifndef BUILDMODULE_H
-#define BUILDMODULE_H
+#ifndef BUILD_MODULE_H
+#define BUILD_MODULE_H
 
 #include <map>
 #include <memory>
 #include <string>
 
-#include "Target.h"
+#include "target.h"
 
 class BuildModule {
     private:
         std::string name;
-        std::string modulePath;
+        std::string modulepath;
         std::map<std::string, std::shared_ptr<Target>> targets;
 
     public:
-        BuildModule(std::string name, std::string modulePath);
+        BuildModule(std::string name, std::string modulepath);
         ~BuildModule() = default;
 
         std::string getName();

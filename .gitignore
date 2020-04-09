@@ -2,6 +2,7 @@
 # Temporary files
 *.swp
 tmp/
+local/
 
 # MacOS Garbage
 .DS_STORE

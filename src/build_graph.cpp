@@ -1,5 +1,5 @@
 
-#include "BuildGraph.h"
+#include "build_graph.h"
 
 bool BuildGraph::hasModule(const std::string &name) {
     return modules.find(name) != modules.end();

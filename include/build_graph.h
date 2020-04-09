@@ -1,10 +1,10 @@
-#ifndef BUILDGRAPH_H
-#define BUILDGRAPH_H
+#ifndef BUILD_GRAPH_H
+#define BUILD_GRAPH_H
 
 #include <map>
 #include <memory>
 
-#include "BuildModule.h"
+#include "build_module.h"
 
 class BuildGraph {
     private:

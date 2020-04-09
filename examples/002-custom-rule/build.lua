@@ -29,7 +29,7 @@ defnrule("copy", {
 })
 
 local M = {
-    name = "",
+    name = "main",
     targets = {}
 }
 

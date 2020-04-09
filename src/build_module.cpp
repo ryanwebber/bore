@@ -1,9 +1,9 @@
 
-#include "BuildModule.h"
+#include "build_module.h"
 
-BuildModule::BuildModule(std::string name, std::string modulePath):
+BuildModule::BuildModule(std::string name, std::string modulepath):
         name(name),
-        modulePath(modulePath),
+        modulepath(modulepath),
         targets(std::map<std::string, std::shared_ptr<Target>>()) {}
 
 std::string BuildModule::getName() {
@@ -11,6 +11,6 @@ std::string BuildModule::getName() {
 }
 
 std::string BuildModule::getModulePath() {
-    return modulePath;
+    return modulepath;
 }
 

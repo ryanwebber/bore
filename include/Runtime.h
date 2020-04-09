@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "BuildGraph.h"
+#include "build_graph.h"
 
 extern "C" {
     #include <lua.h>
