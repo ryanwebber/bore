@@ -55,3 +55,11 @@ void BuildGraph::addModule(const std::shared_ptr<BuildModule> module) {
     modules[module->getName()] = module;
 }
 
+std::shared_ptr<Target> BuildGraph::findProducerOf(const std::string &file) const {
+    if (output_deps.find(file) == output_deps.end()) {
+        return NULL;
+    }
+
+    return output_deps.at(file);
+}
+

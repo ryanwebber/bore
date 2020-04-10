@@ -6,6 +6,10 @@ std::string Target::getName() const {
     return name;
 }
 
+std::string Target::getModuleName() const {
+    return module_name;
+}
+
 std::string Target::getQualifiedName() const {
     return module_name + "." + name;
 }

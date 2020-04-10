@@ -19,6 +19,8 @@ class Rule {
         void addCommand(const std::string &command);
 
         std::vector<std::string> getOutputs() const;
+        std::vector<std::string> getInputs() const;
+        std::vector<std::string> getCommands() const;
 };
 
 #endif

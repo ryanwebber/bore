@@ -16,3 +16,11 @@ std::vector<std::string> Rule::getOutputs() const {
     return outputs;
 }
 
+std::vector<std::string> Rule::getInputs() const {
+    return inputs;
+}
+
+std::vector<std::string> Rule::getCommands() const {
+    return commands;
+}
+

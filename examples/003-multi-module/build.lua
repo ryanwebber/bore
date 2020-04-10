@@ -5,7 +5,7 @@ local M = {
 }
 
 M.targets.all = rule {
-    ins = build.modules.greeting.main.outs,
+    ins = { "transcript.txt" },
     outs = {},
     cmds = {}
 }

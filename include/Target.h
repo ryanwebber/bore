@@ -18,6 +18,7 @@ class Target {
         ~Target() = default;
 
         std::string getName() const;
+        std::string getModuleName() const;
         std::string getQualifiedName() const;
         std::vector<std::shared_ptr<Rule>> getRules() const;
         void addRule(const std::shared_ptr<Rule> rule);

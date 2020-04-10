@@ -6,8 +6,7 @@
 
 class Generator {
     public:
-        virtual bool generateBuildFiles(
-                const BuildModule &module, const BuildGraph &graph) = 0;
+        virtual void generate(const BuildGraph &graph) = 0;
 };
 
 #endif

@@ -1,16 +1,20 @@
 #ifndef GRAPH_GENERATOR_H
 #define GRAPH_GENERATOR_H
 
+#include <filesystem>
 #include "build_module.h"
 #include "build_graph.h"
 #include "generator.h"
 
 class GraphGenerator: public Generator {
+    private:
+        std::filesystem::path outfile;
+
     public:
-        GraphGenerator() = default;
+        GraphGenerator(std::filesystem::path outfile);
         ~GraphGenerator() = default;
 
-        bool generateBuildFiles(const BuildModule &module, const BuildGraph &graph);
+        void generate(const BuildGraph &graph);
 };
 
 #endif

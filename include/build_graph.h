@@ -17,6 +17,7 @@ class BuildGraph {
 
         std::vector<std::shared_ptr<BuildModule>> getModules() const;
         std::shared_ptr<BuildModule> findModule(const std::string &name) const;
+        std::shared_ptr<Target> findProducerOf(const std::string &file) const;
         bool hasModule(const std::string &name) const;
         void addModule(const std::shared_ptr<BuildModule> module);
 };

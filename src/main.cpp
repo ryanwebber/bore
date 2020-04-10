@@ -27,13 +27,10 @@ int main(int argc, const char* argv[]) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
  
-    GraphGenerator g;
+    GraphGenerator g("build/deps.gviz");
 
     auto build_graph = runtime.getBuildGraph();
-    auto modules = build_graph->getModules();
-    for (auto module : modules) {
-        g.generateBuildFiles(*module, *build_graph);
-    }
+    g.generate(*build_graph);
 
     return 0;
 }
