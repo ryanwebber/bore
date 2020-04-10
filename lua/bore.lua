@@ -83,6 +83,7 @@ defnrule = function(name, def)
 
 end
 
+-- TODO this should be userdata
 -- The most primitive rule definition just returns the inputs and outputs
 -- it's given
 defnrule("rule", {
@@ -104,21 +105,30 @@ bore = {
     defnrule = defnrule,
 }
 
+local targets = {}
+setmetatable(targets, {
+    __index = function(self, k)
+        return {
+            ins = { k .. ".txt" },
+            outs = { k .. "_out.txt" }
+        }
+    end
+})
+
+local modules = {}
+setmetatable(modules, {
+    __index = function(self, k)
+        return targets
+    end
+})
+
 -- TODO: Remove me when build context are provided this global
 build = {
     root_dir = "",
     root_build_dir = "",
     local_dir = "",
     local_build_dir = "",
-    get_module = function(path)
-        return {
-            inputs = { "pretend_input.txt" },
-            outputs = { "pretend_output.txt" }
-        }
-    end,
-    get_option = function(key)
-        return "value-for-" .. key
-    end
+    modules = modules
 }
 
 -- Update the global metatable to resolve the defined rules,

@@ -20,32 +20,23 @@ defnrule("copy", {
     generator = function (args)
         return rule {
             ins = args.from,
-            outs = args.to,
+            outs = { args.to },
             cmds = {
                 string.format("cp %s %s", table.concat(args.from, " "), args.to),
-                "rm -rf /tmp/bore-garbage",
-                "echo yay",
             }
         }
     end
 })
 
 local M = {
-    name = "main",
+    name = "libGreeting",
     targets = {}
 }
 
 M.targets.main = copy {
     from = "input.txt",
-    to = "output.txt"
+    to = "greeting.txt"
 }
-
-M.targets.main2 = copy {
-    from = { "output.txt", "other.txt" },
-    to = "final.txt"
-}
-
-M.targets.m3 = ""
 
 return M
 

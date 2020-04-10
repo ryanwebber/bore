@@ -7,11 +7,10 @@ static std::string formatException(
         std::shared_ptr<BuildModule> existing) {
     std::stringstream ss;
     ss << "Module '" << inserted->getName()
-        << "' defined at both '"
+        << "' defined in both "
         << inserted->getBuildFilePath()
-        << "' and '"
-        << existing->getBuildFilePath()
-        << "'";
+        << " and "
+        << existing->getBuildFilePath();
 
     return ss.str();
 }

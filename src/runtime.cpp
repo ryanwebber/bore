@@ -100,6 +100,8 @@ void Runtime::extractTargets(BuildModule& module) {
 void Runtime::extractRules(Target& target, BuildModule& module) {
     int starttop = lua_gettop(L);
 
+    std::cerr << "Target: " << module.getName() << "." << target.getName() << std::endl;
+
     // TODO: Replace 'rule' rule with userdata, and check metatable
     // here
     lua_getfield(L, -1, "ins");
@@ -117,9 +119,9 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
         }
 
     } else {
-        if (!lua_istable(L, -1) || lua_rawlen(L, -1) == 0) {
+        if (!lua_istable(L, -1)) {
             std::stringstream ss;
-            ss << "In target '" << target.getName() << "': Rule must contain at least 1 command";
+            ss << "In target '" << target.getName() << "': Commands must be an array of strings";
             throw ConfigurationException(ss.str(), module.getBuildFilePath());
         }
 
@@ -135,6 +137,7 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
             }
 
             rule->addCommand(lua_tostring(L, -1));
+            std::cerr << "Command: " << lua_tostring(L, -1) << std::endl;
             lua_pop(L, 1);
         }
 
@@ -155,6 +158,7 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
                 }
 
                 rule->addOutput(lua_tostring(L, -1));
+                std::cerr << "Output: " << lua_tostring(L, -1) << std::endl;
                 lua_pop(L, 1);
             }
         }
@@ -176,6 +180,7 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
                 }
 
                 rule->addInput(lua_tostring(L, -1));
+                std::cerr << "Input: " << lua_tostring(L, -1) << std::endl;
                 lua_pop(L, 1);
             }
         }
