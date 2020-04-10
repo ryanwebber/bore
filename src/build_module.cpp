@@ -1,3 +1,4 @@
+#include <cassert>
 #include "build_module.h"
 
 namespace fs = std::filesystem;
@@ -29,19 +30,20 @@ std::vector<std::shared_ptr<Target>> BuildModule::getTargets() const {
 }
 
 std::shared_ptr<Target> BuildModule::findTarget(std::string &name) const {
-    if (targets.find(name) == targets.end()) {
+    if (!hasTarget(name)) {
         return NULL;
     }
 
     return targets.at(name);
 }
 
+bool BuildModule::hasTarget(std::string &name) const {
+    return targets.find(name) != targets.end();
+}
+
 bool BuildModule::addTarget(std::shared_ptr<Target> target) {
     std::string target_name = target->getName();
-    if (findTarget(target_name) != NULL) {
-        return false;
-    }
-
+    assert(hasTarget(target_name) == false);
     targets[target_name] = target;
     return true;
 }

@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include "Runtime.h"
+#include "runtime.h"
+#include "configuration_exception.h"
 
 int main(int argc, const char* argv[]) {
 
@@ -19,10 +20,12 @@ int main(int argc, const char* argv[]) {
         return 3;
     }
 
-    if (!runtime.evaluateBuildModule(argv[2])) {
-        return 4;
+    try {
+        runtime.evaluateBuildModule(argv[2]);
+    } catch (ConfigurationException &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
     }
-
+ 
     auto build_graph = runtime.getBuildGraph();
     auto targets = build_graph->getModules();
     return 0;

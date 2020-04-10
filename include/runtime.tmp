@@ -18,8 +18,8 @@ class Runtime {
         lua_State* L;
         std::shared_ptr<BuildGraph> graph;
 
-        bool extractTargets(BuildModule& module);
-        bool extractRules(Target& target);
+        void extractTargets(BuildModule& module);
+        void extractRules(Target& target, BuildModule& module);
 
     public:
         Runtime();
@@ -28,8 +28,8 @@ class Runtime {
         Runtime(const Runtime& other) = delete;
 
         bool load();
-        bool evaluateBuildModule(const std::string& filepath);
-        bool evaluateBuildScript(const std::string& filepath);
+        void evaluateBuildModule(const std::string& filepath);
+        void evaluateBuildScript(const std::string& filepath);
 
         std::shared_ptr<BuildGraph> getBuildGraph() const;
 };

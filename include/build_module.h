@@ -25,6 +25,7 @@ class BuildModule {
         std::filesystem::path getBuildFilePath() const;
 
         std::shared_ptr<Target> findTarget(std::string &name) const;
+        bool hasTarget(std::string &name) const;
         bool addTarget(std::shared_ptr<Target> target);
 };
 
