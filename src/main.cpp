@@ -22,5 +22,9 @@ int main(int argc, const char* argv[]) {
     if (!runtime.evaluateBuildModule(argv[2])) {
         return 4;
     }
+
+    auto build_graph = runtime.getBuildGraph();
+    auto targets = build_graph->getModules();
+    return 0;
 }
 

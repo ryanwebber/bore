@@ -19,6 +19,15 @@ fs::path BuildModule::getBuildFilePath() const {
     return buildfilepath;
 }
 
+std::vector<std::shared_ptr<Target>> BuildModule::getTargets() const {
+    std::vector<std::shared_ptr<Target>> v;
+    for (auto i : targets) {
+        v.push_back(i.second);
+    }
+
+    return v;
+}
+
 std::shared_ptr<Target> BuildModule::findTarget(std::string &name) const {
     if (targets.find(name) == targets.end()) {
         return NULL;

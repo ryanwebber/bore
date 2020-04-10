@@ -20,6 +20,7 @@ class BuildModule {
         ~BuildModule() = default;
 
         std::string getName() const;
+        std::vector<std::shared_ptr<Target>> getTargets() const;
         std::filesystem::path getModulePath() const;
         std::filesystem::path getBuildFilePath() const;
 

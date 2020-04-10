@@ -30,6 +30,8 @@ class Runtime {
         bool load();
         bool evaluateBuildModule(const std::string& filepath);
         bool evaluateBuildScript(const std::string& filepath);
+
+        std::shared_ptr<BuildGraph> getBuildGraph() const;
 };
 
 #endif

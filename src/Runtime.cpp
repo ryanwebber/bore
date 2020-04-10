@@ -14,6 +14,10 @@ Runtime::~Runtime() {
     lua_close(L);
 }
 
+std::shared_ptr<BuildGraph> Runtime::getBuildGraph() const {
+    return graph;
+}
+
 bool Runtime::load() {
     luaL_openlibs(L);
     return true;

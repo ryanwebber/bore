@@ -14,6 +14,7 @@ class BuildGraph {
         BuildGraph() = default;
         ~BuildGraph() = default;
 
+        std::vector<std::shared_ptr<BuildModule>> getModules() const;
         std::shared_ptr<BuildModule> lookupModule(const std::string &name) const;
         bool hasModule(const std::string &name) const;
         bool insertModule(const std::shared_ptr<BuildModule> module);
