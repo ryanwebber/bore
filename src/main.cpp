@@ -2,6 +2,7 @@
 #include <string>
 
 #include "runtime.h"
+#include "graph_generator.h"
 #include "configuration_exception.h"
 
 int main(int argc, const char* argv[]) {
@@ -26,8 +27,14 @@ int main(int argc, const char* argv[]) {
         std::cerr << "Error: " << e.what() << std::endl;
     }
  
+    GraphGenerator g;
+
     auto build_graph = runtime.getBuildGraph();
-    auto targets = build_graph->getModules();
+    auto modules = build_graph->getModules();
+    for (auto module : modules) {
+        g.generateBuildFiles(*module, *build_graph);
+    }
+
     return 0;
 }
 

@@ -52,7 +52,6 @@ void Runtime::evaluateBuildModule(const std::string& filepath) {
     }
 
     auto module = std::make_shared<BuildModule>(modulename, filepath);
-    graph->addModule(module);
 
     lua_pop(L, 1);
     lua_getfield(L, -1, "targets");
@@ -61,7 +60,9 @@ void Runtime::evaluateBuildModule(const std::string& filepath) {
     }
 
     extractTargets(*module);
-    
+
+    graph->addModule(module);
+
     // Clear the stack before returning
     lua_settop(L, 0);
 }
@@ -89,7 +90,7 @@ void Runtime::extractTargets(BuildModule& module) {
                     module.getBuildFilePath());
         }
 
-        auto target = std::make_shared<Target>(lua_tostring(L, -2));
+        auto target = std::make_shared<Target>(lua_tostring(L, -2), module.getName());
         extractRules(*target, module);
         module.addTarget(target);
 
@@ -98,9 +99,10 @@ void Runtime::extractTargets(BuildModule& module) {
 }
 
 void Runtime::extractRules(Target& target, BuildModule& module) {
-    int starttop = lua_gettop(L);
 
-    std::cerr << "Target: " << module.getName() << "." << target.getName() << std::endl;
+    std::cerr << "Target: " << target.getQualifiedName() << std::endl;
+
+    int starttop = lua_gettop(L);
 
     // TODO: Replace 'rule' rule with userdata, and check metatable
     // here
@@ -121,7 +123,7 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
     } else {
         if (!lua_istable(L, -1)) {
             std::stringstream ss;
-            ss << "In target '" << target.getName() << "': Commands must be an array of strings";
+            ss << "In target '" << target.getQualifiedName() << "': Commands must be an array of strings";
             throw ConfigurationException(ss.str(), module.getBuildFilePath());
         }
 
@@ -132,7 +134,7 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
         while (lua_next(L, -2) != 0) {
             if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
                 std::stringstream ss;
-                ss << "In target '" << target.getName() << "': Commands must be an array of strings";
+                ss << "In target '" << target.getQualifiedName() << "': Commands must be an array of strings";
                 throw ConfigurationException(ss.str(), module.getBuildFilePath());
             }
 
@@ -152,7 +154,7 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
             while (lua_next(L, -2) != 0) {
                 if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
                     std::stringstream ss;
-                    ss << "In target '" << target.getName()
+                    ss << "In target '" << target.getQualifiedName()
                         << "': Outputs must be a string or array of strings";
                     throw ConfigurationException(ss.str(), module.getBuildFilePath());
                 }
@@ -174,7 +176,7 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
             while (lua_next(L, -2) != 0) {
                 if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
                     std::stringstream ss;
-                    ss << "In target '" << target.getName()
+                    ss << "In target '" << target.getQualifiedName()
                         << "': Inputs must be a string or  array of strings";
                     throw ConfigurationException(ss.str(), module.getBuildFilePath());
                 }

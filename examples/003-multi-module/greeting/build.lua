@@ -5,9 +5,9 @@ local M = {
 
 M.targets.main = rule {
     ins = build.modules.libGreeting.main.outs,
-    outs = { "transcript" },
+    outs = { "transcript.txt" },
     cmds = {
-        "cat %{ins} %{outs}"
+        "cat %{ins} > %{outs}"
     }
 }
 

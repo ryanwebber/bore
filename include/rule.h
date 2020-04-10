@@ -17,6 +17,8 @@ class Rule {
         void addInput(const std::string &input);
         void addOutput(const std::string &output);
         void addCommand(const std::string &command);
+
+        std::vector<std::string> getOutputs() const;
 };
 
 #endif

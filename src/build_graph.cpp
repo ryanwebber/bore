@@ -1,5 +1,6 @@
-
+#include <sstream>
 #include "build_graph.h"
+#include "configuration_exception.h"
 #include "duplicate_module_exception.h"
 
 std::shared_ptr<BuildModule> BuildGraph::findModule(const std::string &name) const {
@@ -27,6 +28,28 @@ void BuildGraph::addModule(const std::shared_ptr<BuildModule> module) {
     if (hasModule(module->getName())) {
         auto existing_module = findModule(module->getName());
         throw DuplicateModuleException(module, existing_module);
+    }
+
+    for (auto target : module->getTargets()) {
+        for (auto rule : target->getRules()) {
+            for (auto output : rule->getOutputs()) {
+                if (output_deps.find(output) != output_deps.end()) {
+                    std::stringstream ss;
+                    ss << "Multiple rules produce output '"
+                        << output
+                        << "' (in targets '"
+                        << target->getQualifiedName()
+                        << "' and '"
+                        << output_deps.at(output)->getQualifiedName()
+                        << "')"
+                        << std::endl;
+
+                    throw ConfigurationException(ss.str());
+                }
+
+                output_deps[output] = target;
+            }
+        }
     }
 
     modules[module->getName()] = module;

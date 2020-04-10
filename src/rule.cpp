@@ -12,3 +12,7 @@ void Rule::addCommand(const std::string &command) {
     commands.push_back(command);
 }
 
+std::vector<std::string> Rule::getOutputs() const {
+    return outputs;
+}
+

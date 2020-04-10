@@ -9,6 +9,7 @@
 class BuildGraph {
     private:
         std::map<std::string, std::shared_ptr<BuildModule>> modules;
+        std::map<std::string, std::shared_ptr<Target>> output_deps;
 
     public:
         BuildGraph() = default;
