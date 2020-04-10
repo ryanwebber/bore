@@ -16,11 +16,8 @@ int main(int argc, const char* argv[]) {
         return 2;
     }
 
-    if (!runtime.evaluateBuildScript(argv[1])) {
-        return 3;
-    }
-
     try {
+        runtime.evaluateBuildScript(argv[1]);
         runtime.evaluateBuildModule(argv[2]);
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
