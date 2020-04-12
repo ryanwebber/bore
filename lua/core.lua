@@ -29,6 +29,11 @@ local assert_table =     function(var, msg) assert_type(var, "table", msg)    en
 local assert_number =    function(var, msg) assert_type(var, "number", msg)   end
 local assert_function =  function(var, msg) assert_type(var, "function", msg) end
 
+local assert_rule = function(var, msg)
+    assert_type(var, "userdata", msg)
+    -- TODO: Check the metatable for the rule
+end
+
 local validate = function(var, spec)
     local t = {}
     for pname, pspec in pairs(spec) do
@@ -83,18 +88,61 @@ defnrule = function(name, def)
 
 end
 
--- TODO this should be userdata
--- The most primitive rule definition just returns the inputs and outputs
--- it's given
+submodule = function (path)
+    doassert(function()
+        assert_string(path, "Submodule path must be a string")
+    end)
+
+    _submodule(path)
+end
+
+-- TODO: This global should be provided by native land
+targets = {}
+
+target = function (args)
+    doassert(function()
+        assert_table(args, "Target args must be a table")
+        assert_string(args.name, "Target name must be a string")
+        assert_rule(args.build, "Target build property must be a rule")
+
+        if targets[args.name] ~= nil then
+            fatal("Target '%s' already defined", args.name)
+        end
+    end)
+
+    -- TODO: Remove target addition when targets are managed
+    -- in native land
+    targets[args.name] = args.build
+
+    _target(args)
+end
+
+local to_string_list = function(var, errmsg)
+    if type(var) == "string" then
+        return { var }
+    elseif type(var) == "table" then
+        return var
+    else
+        fatal("%s (got: %s)", errmsg, type(var))
+    end
+end
+
 defnrule("rule", {
+    validator = function(args)
+        return {
+            ins = to_string_list(args.ins, "Rule inputs should be a string array"),
+            outs = to_string_list(args.outs, "Rule outputs should be a string array"),
+            cmds = to_string_list(args.cmds, "Rule commands should be a string array"),
+        }
+    end,
     generator = function(args)
-        return args
+        return _rule(args)
     end
 })
 
 defnrule("phony", {
     generator = function(args)
-        return {
+        return rule {
             ins = {},
             outs = {},
             cmds = {}
@@ -115,17 +163,7 @@ bore = {
     defnrule = defnrule,
 }
 
-targets = {}
-setmetatable(targets, {
-    __index = function(self, k)
-        return {
-            ins = { k .. ".txt" },
-            outs = { k .. "_out.txt" }
-        }
-    end
-})
-
--- TODO: Remove me when build context are provided this global
+-- TODO: Remove me when build context are provided from native land
 module = {
     root_dir = "",
     root_build_dir = "",

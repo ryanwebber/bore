@@ -24,6 +24,23 @@ static int target(lua_State *L) {
     return 0;
 }
 
+static int rule(lua_State *L) {
+    std::cerr << "Rule created" << std::endl;
+
+    /*
+    lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    BuildGraph *graph = (BuildGraph*) lua_touserdata(L, -1);
+    */
+
+    // TODO: We're leaking memory here
+    auto rule = new Rule();
+
+    lua_pushlightuserdata(L, (void *) rule);
+
+    return 1;
+}
+
 Runtime::Runtime() {
     L = luaL_newstate();
     graph = std::make_unique<BuildGraph>();
@@ -40,11 +57,15 @@ void Runtime::loadLibs() {
 void Runtime::loadGlobals() {
     // the global submodule function
     lua_pushcfunction(L, submodule);
-    lua_setglobal(L, "submodule");
+    lua_setglobal(L, "_submodule");
 
     // the global target function
     lua_pushcfunction(L, target);
-    lua_setglobal(L, "target");
+    lua_setglobal(L, "_target");
+
+    // the global rule function
+    lua_pushcfunction(L, rule);
+    lua_setglobal(L, "_rule");
 
     // push the build graph into the regustry
     lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
