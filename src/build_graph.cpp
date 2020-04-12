@@ -31,24 +31,23 @@ void BuildGraph::addModule(const std::shared_ptr<BuildModule> module) {
     }
 
     for (auto target : module->getTargets()) {
-        for (auto rule : target->getRules()) {
-            for (auto output : rule->getOutputs()) {
-                if (output_deps.find(output) != output_deps.end()) {
-                    std::stringstream ss;
-                    ss << "Multiple rules produce output '"
-                        << output
-                        << "' (in targets '"
-                        << target->getQualifiedName()
-                        << "' and '"
-                        << output_deps.at(output)->getQualifiedName()
-                        << "')"
-                        << std::endl;
+        auto rule = target->getRule();
+        for (auto output : rule->getOutputs()) {
+            if (output_deps.find(output) != output_deps.end()) {
+                std::stringstream ss;
+                ss << "Multiple rules produce output '"
+                    << output
+                    << "' (in targets '"
+                    << target->getQualifiedName()
+                    << "' and '"
+                    << output_deps.at(output)->getQualifiedName()
+                    << "')"
+                    << std::endl;
 
-                    throw ConfigurationException(ss.str());
-                }
-
-                output_deps[output] = target;
+                throw ConfigurationException(ss.str());
             }
+
+            output_deps[output] = target;
         }
     }
 

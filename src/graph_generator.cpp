@@ -33,21 +33,20 @@ void GraphGenerator::generate(const BuildGraph &graph) {
 
     for (auto module : modules) {
         for (auto target : module->getTargets()) {
-            for (auto rule : target->getRules()) {
-                for (auto input : rule->getInputs()) {
-                    auto target_producer = graph.findProducerOf(input);
-                    if (target_producer != NULL) {
-                        std::cerr << TAB
-                            << module->getName()
-                            << "_"
-                            << target->getName()
-                            << " -> "
-                            << target_producer->getModuleName()
-                            << "_"
-                            << target_producer->getName()
-                            << ";"
-                            << std::endl;
-                    }
+            auto rule = target->getRule();
+            for (auto input : rule->getInputs()) {
+                auto target_producer = graph.findProducerOf(input);
+                if (target_producer != NULL) {
+                    std::cerr << TAB
+                        << module->getName()
+                        << "_"
+                        << target->getName()
+                        << " -> "
+                        << target_producer->getModuleName()
+                        << "_"
+                        << target_producer->getName()
+                        << ";"
+                        << std::endl;
                 }
             }
         }

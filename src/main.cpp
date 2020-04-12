@@ -25,6 +25,7 @@ int main(int argc, const char* argv[]) {
 
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
     }
  
     GraphGenerator g("build/deps.gviz");

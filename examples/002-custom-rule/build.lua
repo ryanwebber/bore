@@ -45,7 +45,5 @@ M.targets.main2 = copy {
     to = "final.txt"
 }
 
-M.targets.m3 = ""
-
 return M
 

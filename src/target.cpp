@@ -14,11 +14,11 @@ std::string Target::getQualifiedName() const {
     return module_name + "." + name;
 }
 
-std::vector<std::shared_ptr<Rule>> Target::getRules() const {
-    return rules;
+std::shared_ptr<Rule> Target::getRule() const {
+    return rule;
 }
 
-void Target::addRule(const std::shared_ptr<Rule> rule) {
-    rules.push_back(rule);
+void Target::setRule(const std::shared_ptr<Rule> rule) {
+    this->rule = rule;
 }
 

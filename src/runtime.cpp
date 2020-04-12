@@ -91,16 +91,14 @@ void Runtime::extractTargets(BuildModule& module) {
         }
 
         auto target = std::make_shared<Target>(lua_tostring(L, -2), module.getName());
-        extractRules(*target, module);
+        extractRule(*target, module);
         module.addTarget(target);
 
         lua_pop(L, 1);
     }
 }
 
-void Runtime::extractRules(Target& target, BuildModule& module) {
-
-    std::cerr << "Target: " << target.getQualifiedName() << std::endl;
+void Runtime::extractRule(Target& target, BuildModule& module) {
 
     int starttop = lua_gettop(L);
 
@@ -109,90 +107,73 @@ void Runtime::extractRules(Target& target, BuildModule& module) {
     lua_getfield(L, -1, "ins");
     lua_getfield(L, -2, "outs");
     lua_getfield(L, -3, "cmds");
-    if (lua_isnil(L, -1)) {
-        lua_pop(L, 3);
-        lua_pushnil(L);
-        while(lua_next(L, -2) != 0) {
-            if (lua_istable(L, -1)) {
-                extractRules(target, module);
-            }
+    if (!lua_istable(L, -1)) {
+        std::stringstream ss;
+        ss << "In target '" << target.getQualifiedName() << "': Commands must be an array of strings";
+        throw ConfigurationException(ss.str(), module.getBuildFilePath());
+    }
 
-            lua_pop(L, 1);
-        }
+    auto rule = std::make_shared<Rule>();
 
-    } else {
-        if (!lua_istable(L, -1)) {
+    // Adding the commands
+    lua_pushnil(L);  /* first key */
+    while (lua_next(L, -2) != 0) {
+        if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
             std::stringstream ss;
             ss << "In target '" << target.getQualifiedName() << "': Commands must be an array of strings";
             throw ConfigurationException(ss.str(), module.getBuildFilePath());
         }
 
-        auto rule = std::make_shared<Rule>();
+        rule->addCommand(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
 
-        // Adding the commands
+    // Pop back to outputs
+    lua_pop(L, 1);
+
+    // Adding the outputs
+    if (lua_isstring(L, -1)) {
+        rule->addOutput(lua_tostring(L, -1));
+    } else if (lua_istable(L, -1) && lua_rawlen(L, -1) > 0) {
         lua_pushnil(L);  /* first key */
         while (lua_next(L, -2) != 0) {
             if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
                 std::stringstream ss;
-                ss << "In target '" << target.getQualifiedName() << "': Commands must be an array of strings";
+                ss << "In target '" << target.getQualifiedName()
+                    << "': Outputs must be a string or array of strings";
                 throw ConfigurationException(ss.str(), module.getBuildFilePath());
             }
 
-            rule->addCommand(lua_tostring(L, -1));
-            std::cerr << "Command: " << lua_tostring(L, -1) << std::endl;
+            rule->addOutput(lua_tostring(L, -1));
             lua_pop(L, 1);
         }
-
-        // Pop back to outputs
-        lua_pop(L, 1);
-
-        // Adding the outputs
-        if (lua_isstring(L, -1)) {
-            rule->addOutput(lua_tostring(L, -1));
-        } else if (lua_istable(L, -1) && lua_rawlen(L, -1) > 0) {
-            lua_pushnil(L);  /* first key */
-            while (lua_next(L, -2) != 0) {
-                if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
-                    std::stringstream ss;
-                    ss << "In target '" << target.getQualifiedName()
-                        << "': Outputs must be a string or array of strings";
-                    throw ConfigurationException(ss.str(), module.getBuildFilePath());
-                }
-
-                rule->addOutput(lua_tostring(L, -1));
-                std::cerr << "Output: " << lua_tostring(L, -1) << std::endl;
-                lua_pop(L, 1);
-            }
-        }
-
-        // Pop back to inputs
-        lua_pop(L, 1);
-
-        // Adding the inputs
-        if (lua_isstring(L, -1)) {
-            rule->addOutput(lua_tostring(L, -1));
-        } else if (lua_istable(L, -1) && lua_rawlen(L, -1) > 0) {
-            lua_pushnil(L);  /* first key */
-            while (lua_next(L, -2) != 0) {
-                if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
-                    std::stringstream ss;
-                    ss << "In target '" << target.getQualifiedName()
-                        << "': Inputs must be a string or  array of strings";
-                    throw ConfigurationException(ss.str(), module.getBuildFilePath());
-                }
-
-                rule->addInput(lua_tostring(L, -1));
-                std::cerr << "Input: " << lua_tostring(L, -1) << std::endl;
-                lua_pop(L, 1);
-            }
-        }
-
-        target.addRule(rule);
-
-        // Remember to do this one last time
-        lua_pop(L, 1);
-
     }
+
+    // Pop back to inputs
+    lua_pop(L, 1);
+
+    // Adding the inputs
+    if (lua_isstring(L, -1)) {
+        rule->addOutput(lua_tostring(L, -1));
+    } else if (lua_istable(L, -1) && lua_rawlen(L, -1) > 0) {
+        lua_pushnil(L);  /* first key */
+        while (lua_next(L, -2) != 0) {
+            if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
+                std::stringstream ss;
+                ss << "In target '" << target.getQualifiedName()
+                    << "': Inputs must be a string or  array of strings";
+                throw ConfigurationException(ss.str(), module.getBuildFilePath());
+            }
+
+            rule->addInput(lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+    }
+
+    target.setRule(rule);
+
+    // Remember to do this one last time
+    lua_pop(L, 1);
 
     int endtop = lua_gettop(L);
     assert(endtop == starttop);

@@ -19,7 +19,7 @@ class Runtime {
         std::shared_ptr<BuildGraph> graph;
 
         void extractTargets(BuildModule& module);
-        void extractRules(Target& target, BuildModule& module);
+        void extractRule(Target& target, BuildModule& module);
 
     public:
         Runtime();

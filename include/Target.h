@@ -11,7 +11,7 @@ class Target {
     private:
         std::string name;
         std::string module_name;
-        std::vector<std::shared_ptr<Rule>> rules;
+        std::shared_ptr<Rule> rule;
 
     public:
         Target(std::string name, std::string module_name);
@@ -20,8 +20,9 @@ class Target {
         std::string getName() const;
         std::string getModuleName() const;
         std::string getQualifiedName() const;
-        std::vector<std::shared_ptr<Rule>> getRules() const;
-        void addRule(const std::shared_ptr<Rule> rule);
+        std::shared_ptr<Rule> getRule() const;
+        void setRule(std::shared_ptr<Rule> rule);
 };
 
 #endif
+
