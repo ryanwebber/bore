@@ -12,6 +12,7 @@ class Rule {
 
     public:
         Rule() = default;
+        Rule(Rule &other) = default;
         ~Rule() = default;
 
         void addInput(const std::string &input);
