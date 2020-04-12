@@ -7,8 +7,15 @@
 
 namespace fs = std::filesystem;
 
+static const char kBuildGraphRegistryMarker = 0x55;
+
 static int submodule(lua_State *L) {
     std::cerr << "Submodule called" << std::endl;
+
+    lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    // BuildGraph *graph = (BuildGraph*) lua_touserdata(L, -1);
+
     return 0;
 }
 
@@ -31,12 +38,19 @@ void Runtime::loadLibs() {
 }
 
 void Runtime::loadGlobals() {
-    // TODO: This should be part of the bore namespace in lua
+    // the global submodule function
     lua_pushcfunction(L, submodule);
     lua_setglobal(L, "submodule");
 
+    // the global target function
     lua_pushcfunction(L, target);
     lua_setglobal(L, "target");
+
+    // push the build graph into the regustry
+    lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
+    lua_pushlightuserdata(L, (void *) graph.get());
+    lua_settable(L, LUA_REGISTRYINDEX);
+    std::cerr << "Graph pointer " << graph.get() << std::endl;
 }
 
 std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::vector<std::string> &filepaths) {

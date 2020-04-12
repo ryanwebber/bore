@@ -16,7 +16,7 @@ extern "C" {
 class Runtime {
 
     private:
-        lua_State* L;
+        lua_State *L;
         std::unique_ptr<BuildGraph> graph;
 
         void loadLibs();
