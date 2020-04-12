@@ -6,7 +6,6 @@
 class ConfigurationException: public std::runtime_error {
     public:
         ConfigurationException(std::string msg);
-        ConfigurationException(std::string msg, const std::string &file);
 };
 
 #endif

@@ -115,20 +115,12 @@ setmetatable(targets, {
     end
 })
 
-local modules = {}
-setmetatable(modules, {
-    __index = function(self, k)
-        return targets
-    end
-})
-
 -- TODO: Remove me when build context are provided this global
-build = {
+module = {
     root_dir = "",
     root_build_dir = "",
     local_dir = "",
     local_build_dir = "",
-    modules = modules
 }
 
 -- Update the global metatable to resolve the defined rules,

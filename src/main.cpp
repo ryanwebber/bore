@@ -13,25 +13,20 @@ int main(int argc, const char* argv[]) {
     }
 
     Runtime runtime;
-    if (!runtime.load()) {
-        return 2;
-    }
+    std::unique_ptr<BuildGraph> graph;
+    std::vector<std::string> files {
+        argv[1], argv[2]
+    };
 
     try {
-        runtime.evaluateBuildScript(argv[1]);
-
-        for (int i = 2; i < argc; i++)
-            runtime.evaluateBuildModule(argv[i]);
-
+        graph = runtime.loadAndEvaluate(files);
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
  
     GraphGenerator g("build/deps.gviz");
-
-    auto build_graph = runtime.getBuildGraph();
-    g.generate(*build_graph);
+    g.generate(*graph);
 
     return 0;
 }

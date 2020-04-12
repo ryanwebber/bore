@@ -3,23 +3,23 @@
 
 #include <map>
 #include <memory>
+#include <vector>
 
-#include "build_module.h"
+#include "target.h"
 
 class BuildGraph {
     private:
-        std::map<std::string, std::shared_ptr<BuildModule>> modules;
-        std::map<std::string, std::shared_ptr<Target>> output_deps;
+        std::map<std::string, std::shared_ptr<Target>> targets;
+        std::map<std::string, std::shared_ptr<Target>> dependencies;
 
     public:
         BuildGraph() = default;
         ~BuildGraph() = default;
 
-        std::vector<std::shared_ptr<BuildModule>> getModules() const;
-        std::shared_ptr<BuildModule> findModule(const std::string &name) const;
-        std::shared_ptr<Target> findProducerOf(const std::string &file) const;
-        bool hasModule(const std::string &name) const;
-        void addModule(const std::shared_ptr<BuildModule> module);
+        void addTarget(const std::shared_ptr<Target> target);
+        std::vector<std::shared_ptr<Target>> getTargets() const;
+        std::shared_ptr<Target> findTarget(const std::string &target) const;
+        std::shared_ptr<Target> findTargetProducing(const std::string &file) const;
 };
 
 #endif

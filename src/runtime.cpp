@@ -9,98 +9,39 @@ namespace fs = std::filesystem;
 
 Runtime::Runtime() {
     L = luaL_newstate();
-    graph = std::make_shared<BuildGraph>();
+    graph = std::make_unique<BuildGraph>();
 }
 
 Runtime::~Runtime() {
     lua_close(L);
 }
 
-std::shared_ptr<BuildGraph> Runtime::getBuildGraph() const {
-    return graph;
-}
-
-bool Runtime::load() {
+void Runtime::loadLibs() {
     luaL_openlibs(L);
-    return true;
 }
 
-void Runtime::evaluateBuildModule(const std::string& filepath) {
-
-    // Load the file into a chunk  and calling, expecing one return value
-    // (the module)
-    int err = luaL_loadfile(L, filepath.c_str()) || lua_pcall(L, 0, 1, 0);
-    if (err) {
-        throw ConfigurationException(lua_tostring(L, -1));
-    }
-
-    if (!lua_istable(L, -1)) {
-        throw ConfigurationException("Expected build file to return a module", filepath);
-    }
-
-    lua_getfield(L, -1, "name");
-
-    size_t len;
-    const char* modulename = lua_tolstring(L, -1, &len);
-
-    if (modulename == NULL) {
-        throw ConfigurationException("Build module should define a name", filepath);
-    }
-
-    if (len == 0) {
-        throw ConfigurationException("Build Module name cannot be empty", filepath);
-    }
-
-    auto module = std::make_shared<BuildModule>(modulename, filepath);
-
-    lua_pop(L, 1);
-    lua_getfield(L, -1, "targets");
-    if (!lua_istable(L, -1)) {
-        throw ConfigurationException("Buld module defines no targets", filepath);
-    }
-
-    extractTargets(*module);
-
-    graph->addModule(module);
-
-    // Clear the stack before returning
-    lua_settop(L, 0);
+void Runtime::loadGlobals() {
 }
 
-void Runtime::evaluateBuildScript(const std::string& filepath) {
-    int status = luaL_dofile(L, filepath.c_str());
-    if (status) {
-        throw ConfigurationException(lua_tostring(L, -1));
-    }
+std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::vector<std::string> &filepaths) {
+    // loadAndEvalueate can only be called once because it taints
+    // the lua runtime
+    assert(graph != nullptr);
 
-    // Clear the stack before returning
-    lua_settop(L, 0);
-}
+    loadLibs();
+    loadGlobals();
 
-void Runtime::extractTargets(BuildModule& module) {
-
-    lua_pushnil(L);
-    while(lua_next(L, -2) != 0) {
-        if (!lua_istable(L, -1)) {
-            throw ConfigurationException("Expected module targets to be a table", module.getBuildFilePath());
+    for (auto file : filepaths) {
+        int err = luaL_dofile(L, file.c_str());
+        if (err) {
+            throw ConfigurationException(lua_tostring(L, -1));
         }
-
-        if (!lua_isstring(L, -2)) {
-            throw ConfigurationException("Expected module targets to be keyed by string",
-                    module.getBuildFilePath());
-        }
-
-        auto target = std::make_shared<Target>(lua_tostring(L, -2), module.getName());
-        extractRule(*target, module);
-        module.addTarget(target);
-
-        lua_pop(L, 1);
     }
+
+    return std::move(graph);
 }
 
-void Runtime::extractRule(Target& target, BuildModule& module) {
-
-    int starttop = lua_gettop(L);
+void Runtime::extractRule() {
 
     // TODO: Replace 'rule' rule with userdata, and check metatable
     // here
@@ -108,9 +49,7 @@ void Runtime::extractRule(Target& target, BuildModule& module) {
     lua_getfield(L, -2, "outs");
     lua_getfield(L, -3, "cmds");
     if (!lua_istable(L, -1)) {
-        std::stringstream ss;
-        ss << "In target '" << target.getQualifiedName() << "': Commands must be an array of strings";
-        throw ConfigurationException(ss.str(), module.getBuildFilePath());
+        throw ConfigurationException("TMP ERROR");
     }
 
     auto rule = std::make_shared<Rule>();
@@ -119,9 +58,7 @@ void Runtime::extractRule(Target& target, BuildModule& module) {
     lua_pushnil(L);  /* first key */
     while (lua_next(L, -2) != 0) {
         if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
-            std::stringstream ss;
-            ss << "In target '" << target.getQualifiedName() << "': Commands must be an array of strings";
-            throw ConfigurationException(ss.str(), module.getBuildFilePath());
+            throw ConfigurationException("TMP ERROR");
         }
 
         rule->addCommand(lua_tostring(L, -1));
@@ -138,10 +75,7 @@ void Runtime::extractRule(Target& target, BuildModule& module) {
         lua_pushnil(L);  /* first key */
         while (lua_next(L, -2) != 0) {
             if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
-                std::stringstream ss;
-                ss << "In target '" << target.getQualifiedName()
-                    << "': Outputs must be a string or array of strings";
-                throw ConfigurationException(ss.str(), module.getBuildFilePath());
+                throw ConfigurationException("TMP ERROR");
             }
 
             rule->addOutput(lua_tostring(L, -1));
@@ -159,10 +93,7 @@ void Runtime::extractRule(Target& target, BuildModule& module) {
         lua_pushnil(L);  /* first key */
         while (lua_next(L, -2) != 0) {
             if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
-                std::stringstream ss;
-                ss << "In target '" << target.getQualifiedName()
-                    << "': Inputs must be a string or  array of strings";
-                throw ConfigurationException(ss.str(), module.getBuildFilePath());
+                throw ConfigurationException("TMP ERROR");
             }
 
             rule->addInput(lua_tostring(L, -1));
@@ -170,12 +101,7 @@ void Runtime::extractRule(Target& target, BuildModule& module) {
         }
     }
 
-    target.setRule(rule);
-
     // Remember to do this one last time
     lua_pop(L, 1);
-
-    int endtop = lua_gettop(L);
-    assert(endtop == starttop);
 }
 

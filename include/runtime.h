@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "build_graph.h"
 
@@ -16,22 +17,22 @@ class Runtime {
 
     private:
         lua_State* L;
-        std::shared_ptr<BuildGraph> graph;
+        std::unique_ptr<BuildGraph> graph;
 
-        void extractTargets(BuildModule& module);
-        void extractRule(Target& target, BuildModule& module);
+        void loadLibs();
+        void loadGlobals();
+        void extractRule();
 
     public:
         Runtime();
         ~Runtime();
 
+        // Disable the copy constructor, or we'll mess up ownership
+        // of the lua_State
         Runtime(const Runtime& other) = delete;
 
-        bool load();
-        void evaluateBuildModule(const std::string& filepath);
-        void evaluateBuildScript(const std::string& filepath);
-
-        std::shared_ptr<BuildGraph> getBuildGraph() const;
+        std::unique_ptr<BuildGraph> loadAndEvaluate(
+                const std::vector<std::string> &filepaths);
 };
 
 #endif

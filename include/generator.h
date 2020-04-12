@@ -2,7 +2,6 @@
 #define generator
 
 #include "build_graph.h"
-#include "build_module.h"
 
 class Generator {
     public:

@@ -2,9 +2,9 @@
 #define GRAPH_GENERATOR_H
 
 #include <filesystem>
-#include "build_module.h"
-#include "build_graph.h"
+
 #include "generator.h"
+#include "build_graph.h"
 
 class GraphGenerator: public Generator {
     private:
@@ -18,3 +18,4 @@ class GraphGenerator: public Generator {
 };
 
 #endif
+

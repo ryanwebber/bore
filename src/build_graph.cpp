@@ -1,64 +1,39 @@
 #include <sstream>
 #include "build_graph.h"
 #include "configuration_exception.h"
-#include "duplicate_module_exception.h"
 
-std::shared_ptr<BuildModule> BuildGraph::findModule(const std::string &name) const {
-    if (!hasModule(name)) {
-        return NULL;
+void BuildGraph::addTarget(const std::shared_ptr<Target> target) {
+    if (targets.find(target->getName()) != targets.end()) {
+        throw ConfigurationException("Target '" + target->getName() + "' is already defined");
     }
 
-    return modules.at(name);
+    // TODO add to dependency graph and check for collisions
+
+    targets[target->getName()] = target;
 }
 
-std::vector<std::shared_ptr<BuildModule>> BuildGraph::getModules() const {
-    std::vector<std::shared_ptr<BuildModule>> v;
-    for (auto &i : modules) {
-        v.push_back(i.second);
+std::vector<std::shared_ptr<Target>> BuildGraph::getTargets() const {
+    std::vector<std::shared_ptr<Target>> v;
+    for (auto target : targets) {
+        v.push_back(target.second);
     }
 
     return v;
 }
 
-bool BuildGraph::hasModule(const std::string &name) const {
-    return modules.find(name) != modules.end();
-}
-
-void BuildGraph::addModule(const std::shared_ptr<BuildModule> module) {
-    if (hasModule(module->getName())) {
-        auto existing_module = findModule(module->getName());
-        throw DuplicateModuleException(module, existing_module);
-    }
-
-    for (auto target : module->getTargets()) {
-        auto rule = target->getRule();
-        for (auto output : rule->getOutputs()) {
-            if (output_deps.find(output) != output_deps.end()) {
-                std::stringstream ss;
-                ss << "Multiple rules produce output '"
-                    << output
-                    << "' (in targets '"
-                    << target->getQualifiedName()
-                    << "' and '"
-                    << output_deps.at(output)->getQualifiedName()
-                    << "')"
-                    << std::endl;
-
-                throw ConfigurationException(ss.str());
-            }
-
-            output_deps[output] = target;
-        }
-    }
-
-    modules[module->getName()] = module;
-}
-
-std::shared_ptr<Target> BuildGraph::findProducerOf(const std::string &file) const {
-    if (output_deps.find(file) == output_deps.end()) {
+std::shared_ptr<Target> BuildGraph::findTarget(const std::string &target) const {
+    if (targets.find(target) == targets.end()) {
         return NULL;
     }
 
-    return output_deps.at(file);
+    return targets.at(target);
+}
+
+std::shared_ptr<Target> BuildGraph::findTargetProducing(const std::string &output) const {
+    if (dependencies.find(output) == dependencies.end()) {
+        return NULL;
+    }
+
+    return dependencies.at(output);
 }
 

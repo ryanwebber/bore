@@ -24,3 +24,4 @@ class Rule {
 };
 
 #endif
+
