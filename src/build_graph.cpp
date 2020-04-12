@@ -7,7 +7,16 @@ void BuildGraph::addTarget(const std::shared_ptr<Target> target) {
         throw ConfigurationException("Target '" + target->getName() + "' is already defined");
     }
 
-    // TODO add to dependency graph and check for collisions
+    // TODO check for cyclic dependencies here
+    for (auto output : target->getRule()->getOutputs()) {
+        auto existing_target = findTargetProducing(output);
+        if (existing_target != NULL) {
+            throw ConfigurationException("Targets '" + target->getName() + "' and '" +
+                    existing_target->getName() + "' both produce output '" + output + "'");
+        }
+
+        dependencies[output] = target;
+    }
 
     targets[target->getName()] = target;
 }
