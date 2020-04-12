@@ -7,6 +7,16 @@
 
 namespace fs = std::filesystem;
 
+static int submodule(lua_State *L) {
+    std::cerr << "Submodule called" << std::endl;
+    return 0;
+}
+
+static int target(lua_State *L) {
+    std::cerr << "Target created" << std::endl;
+    return 0;
+}
+
 Runtime::Runtime() {
     L = luaL_newstate();
     graph = std::make_unique<BuildGraph>();
@@ -21,6 +31,12 @@ void Runtime::loadLibs() {
 }
 
 void Runtime::loadGlobals() {
+    // TODO: This should be part of the bore namespace in lua
+    lua_pushcfunction(L, submodule);
+    lua_setglobal(L, "submodule");
+
+    lua_pushcfunction(L, target);
+    lua_setglobal(L, "target");
 }
 
 std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::vector<std::string> &filepaths) {

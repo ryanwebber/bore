@@ -4,7 +4,7 @@
 submodule("myLib/build.lia")
 
 target {
-    name "greet",
+    name = "greet",
     build = rule {
         ins = { "${template.ins}" }, -- could also use targets.template.ins
         outs = { },

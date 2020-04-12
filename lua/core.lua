@@ -92,6 +92,16 @@ defnrule("rule", {
     end
 })
 
+defnrule("phony", {
+    generator = function(args)
+        return {
+            ins = {},
+            outs = {},
+            cmds = {}
+        }
+    end
+})
+
 -- Setup global utilities
 bore = {
     -- Assertions
@@ -105,7 +115,7 @@ bore = {
     defnrule = defnrule,
 }
 
-local targets = {}
+targets = {}
 setmetatable(targets, {
     __index = function(self, k)
         return {
