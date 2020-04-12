@@ -11,18 +11,6 @@ static const char *kBuildGraphRegistryMarker = "__usedAsAddress";
 namespace fs = std::filesystem;
 
 static int rule(lua_State *L) {
-    std::cerr << "Rule created" << std::endl;
-
-    // We're going to return a userdata containing a Rule*.
-    // We'll also define a metatable for it to check that
-    // it's actually a rule, and we can create a gc method
-    // for it that will call delete on the constining Rule.
-    //
-    // We'll also need to add a copy constructor onto Rule
-    // that we'll call when we insert the rule into the build
-    // graph through target() so that when Rule is gc'd we don't
-    // keep invalid references to it
-
     Rule **prule = reinterpret_cast<Rule**>(lua_newuserdata(L, sizeof(Rule*)));
     *prule = new Rule();
 
@@ -64,22 +52,35 @@ static int submodule(lua_State *L) {
 
 static int target(lua_State *L) {
     std::cerr << "Target created" << std::endl;
+ 
+    // Grab the build graph
+    lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    BuildGraph *graph = (BuildGraph*) lua_touserdata(L, -1);
+    lua_pop(L, 1);
 
+    // Grab the name and the rule
     lua_getfield(L, -1, "name");
     lua_getfield(L, -2, "build");
 
     Rule *rule = rule_check(L, -1);
     luaL_argcheck(L, rule != NULL, 1, "Unexpected non-rule type received");
+    lua_pop(L, 1);
+
+    std::string name = lua_tostring(L, -1);
+    lua_pop(L, 1);
 
     for (auto output : rule->getOutputs()) {
-        std::cerr << "Target has output: " << output << std::endl;
+        std::cerr << "Target '" << name << "' has output: " << output << std::endl;
     }
 
-    /*
-    lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    BuildGraph *graph = (BuildGraph*) lua_touserdata(L, -1);
-    */
+    // Create a copy of the rule
+    auto rule_copy = std::make_shared<Rule>(*rule);
+    assert(rule_copy.get() != rule);
+
+    // Create a new target with the rule copy
+    auto target = std::make_shared<Target>(name, rule_copy);
+    graph->addTarget(target);
 
     return 0;
 }
@@ -121,7 +122,6 @@ void Runtime::loadGlobals() {
     lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
     lua_pushlightuserdata(L, (void *) graph.get());
     lua_settable(L, LUA_REGISTRYINDEX);
-    std::cerr << "Graph pointer " << graph.get() << std::endl;
 }
 
 std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::vector<std::string> &filepaths) {

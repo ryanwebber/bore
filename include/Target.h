@@ -13,7 +13,7 @@ class Target {
         std::shared_ptr<Rule> rule;
 
     public:
-        Target(std::string name, std::shared_ptr<Rule> rule);
+        Target(std::string &name, std::shared_ptr<Rule> rule);
         ~Target() = default;
 
         std::string getName() const;
