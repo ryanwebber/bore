@@ -26,10 +26,8 @@ void GraphGenerator::generate(const BuildGraph &graph) {
                 << std::endl;
         }
 
-        std::cerr << TAB << "}" << std::endl;
+        std::cerr << TAB << "}" << std::endl << std::endl;
     }
-
-    std::cerr << std::endl;
 
     for (auto module : modules) {
         for (auto target : module->getTargets()) {
