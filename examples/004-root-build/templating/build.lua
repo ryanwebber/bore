@@ -1,7 +1,6 @@
 
-local name = config.name
+local name = "Ryan webber"
 local build_dir = module.local_build_dir
-local path = bore.bath
 
 target {
     name = "template",

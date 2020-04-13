@@ -99,18 +99,27 @@ defnrule = function(name, def)
 
 end
 
-submodule = function (path)
+submodule = function (mod, relpath)
     doassert(function()
-        assert_string(path, "Submodule path must be a string")
+        assert_string(relpath, "Submodule path must be a string")
     end)
 
-    local env = setmetatable({
-        test = "Hello"
-    }, {
-        __index = _G
-    })
+    local buildfile = relpath
+    if mod ~= nil then
+        buildfile = path.join(mod.local_dir, relpath)
+    end
 
-    _bore_submodule(path, env)
+    local local_dir = path.dirname(buildfile)
+
+    local module = {
+        root_dir = "",
+        root_build_dir = "",
+        local_dir = local_dir,
+        local_build_dir = "",
+    }
+
+    local env = setmetatable({ module = module }, { __index = _G })
+    _bore_submodule(buildfile, env)
 end
 
 targets = setmetatable({}, {
@@ -169,17 +178,6 @@ bore = {
     assert_function = assert_function,
     assert_table = assert_table,
     validate = validate,
-
-    -- Rule utilities
-    defnrule = defnrule,
-}
-
--- TODO: Remove me when build context are provided from native land
-module = {
-    root_dir = "",
-    root_build_dir = "",
-    local_dir = "",
-    local_build_dir = "",
 }
 
 -- Update the global metatable to resolve the defined rules,

@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "runtime.h"
+#include "path.h"
 #include "configuration_exception.h"
 
 static const char *kRuleMetatableMarker = "Bore.RuleMarker";
@@ -213,6 +214,9 @@ void Runtime::loadLibs() {
     lua_pushstring(L, "__gc");
     lua_pushcfunction(L, rule_gc);
     lua_settable(L, -3);
+
+    // Load the path library
+    luaopen_path(L);
 }
 
 void Runtime::loadGlobals() {
@@ -257,8 +261,9 @@ std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &corepath
         throw ConfigurationException("Problem loading core module at '" + corepath + "'");
     }
 
+    lua_pushnil(L);
     lua_pushstring(L, modulepath.c_str());
-    if (lua_pcall(L, 1, LUA_MULTRET, 0)) {
+    if (lua_pcall(L, 2, LUA_MULTRET, 0)) {
         throw ConfigurationException(lua_tostring(L, -1));
     }
 

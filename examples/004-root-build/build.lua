@@ -1,14 +1,12 @@
 
-print("Do we have globals? " .. test)
-
--- Similar to require, but sets up the global
--- build variable
--- submodule("myLib/build.lua")
+-- Similar to require, but sets up the available
+-- build paths correctly
+submodule(module, "templating/build.lua")
 
 target {
     name = "greet",
     build = rule {
-        ins = { "${template.ins}" }, -- could also use targets.template.ins
+        ins = { path.join(module.local_dir, "${template.ins}") },
         outs = { },
         cmds = { "cat ${ins}" }
     }
