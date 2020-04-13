@@ -159,6 +159,7 @@ defnrule("rule", {
     end
 })
 
+-- TODO: phony rule isn't really working
 defnrule("phony", {
     generator = function(args)
         return rule {
