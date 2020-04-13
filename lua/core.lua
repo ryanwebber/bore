@@ -111,11 +111,18 @@ submodule = function (path)
         __index = _G
     })
 
-    _submodule(path, env)
+    _bore_submodule(path, env)
 end
 
--- TODO: This global should be provided by native land
-targets = {}
+targets = setmetatable({}, {
+    __index = function(_, name)
+        doassert(function()
+            assert_string(name, "Target index must be a string")
+        end)
+
+        return _bore_find_target(name)
+    end
+})
 
 target = function (args)
     doassert(function()
@@ -123,16 +130,14 @@ target = function (args)
         assert_string(args.name, "Target name must be a string")
         assert_rule(args.build, "Target build property must be a rule")
 
+        --[[
         if targets[args.name] ~= nil then
             fatal("Target '%s' already defined", args.name)
         end
+        ]]
     end)
 
-    -- TODO: Remove target addition when targets are managed
-    -- in native land
-    targets[args.name] = args.build
-
-    _target(args)
+    _bore_target(args)
 end
 
 defnrule("rule", {
@@ -144,7 +149,7 @@ defnrule("rule", {
         }
     end,
     generator = function(args)
-        return _rule(args)
+        return _bore_rule(args)
     end
 })
 

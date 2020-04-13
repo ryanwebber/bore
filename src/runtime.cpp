@@ -135,10 +135,6 @@ static int target(lua_State *L) {
     std::string name = lua_tostring(L, -1);
     lua_pop(L, 1);
 
-    for (auto output : rule->getOutputs()) {
-        std::cerr << "Target '" << name << "' has output: " << output << std::endl;
-    }
-
     // Create a copy of the rule
     auto rule_copy = std::make_shared<Rule>(*rule);
     assert(rule_copy.get() != rule);
@@ -148,6 +144,55 @@ static int target(lua_State *L) {
     graph->addTarget(target);
 
     return 0;
+}
+
+static int find_target(lua_State *L) {
+    // Grab the build graph
+    lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
+    lua_gettable(L, LUA_REGISTRYINDEX);
+    BuildGraph *graph = (BuildGraph*) lua_touserdata(L, -1);
+    lua_pop(L, 1);
+
+    const char* name = lua_tostring(L, 1);
+    auto target = graph->findTarget(name);
+
+    if (target == NULL) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    auto rule = target->getRule();
+    auto ins = rule->getInputs();
+    auto outs = rule->getOutputs();
+    auto cmds = rule->getCommands();
+
+    lua_newtable(L); // top level table
+
+    lua_newtable(L); // outs
+    for (size_t i = 0; i < outs.size(); i++) {
+        lua_pushstring(L, outs[i].c_str());
+        lua_seti(L, -2, i + 1);
+    }
+
+    lua_newtable(L); // ins
+    for (size_t i = 0; i < ins.size(); i++) {
+        lua_pushstring(L, ins[i].c_str());
+        lua_seti(L, -2, i + 1);
+    }
+
+    lua_newtable(L); // cmds
+    for (size_t i = 0; i < cmds.size(); i++) {
+        lua_pushstring(L, cmds[i].c_str());
+        lua_seti(L, -2, i + 1);
+    }
+
+    // reversed order here since we take items
+    // off the tstack
+    lua_setfield(L, -4, "cmds");
+    lua_setfield(L, -3, "ins");
+    lua_setfield(L, -2, "outs");
+
+    return 1;
 }
 
 Runtime::Runtime() {
@@ -173,15 +218,19 @@ void Runtime::loadLibs() {
 void Runtime::loadGlobals() {
     // the global submodule function
     lua_pushcfunction(L, submodule);
-    lua_setglobal(L, "_submodule");
+    lua_setglobal(L, "_bore_submodule");
 
     // the global target function
     lua_pushcfunction(L, target);
-    lua_setglobal(L, "_target");
+    lua_setglobal(L, "_bore_target");
 
     // the global rule function
     lua_pushcfunction(L, rule);
-    lua_setglobal(L, "_rule");
+    lua_setglobal(L, "_bore_rule");
+
+    // the global find target function
+    lua_pushcfunction(L, find_target);
+    lua_setglobal(L, "_bore_find_target");
 
     // push the build graph into the regustry
     lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
@@ -202,7 +251,6 @@ std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &corepath
     if (luaL_dofile(L, corepath.c_str())) {
         throw ConfigurationException(lua_tostring(L, -1));
     }
-
 
     int t = lua_getglobal(L, "submodule");
     if (t != LUA_TFUNCTION) {
