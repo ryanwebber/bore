@@ -104,7 +104,16 @@ static int rule_gc(lua_State *L) {
 }
 
 static int submodule(lua_State *L) {
-    std::cerr << "Submodule called" << std::endl;
+    const char* path = lua_tostring(L, 1);
+    if (luaL_loadfile(L, path)) {
+        lua_error(L);
+        return 0;
+    }
+
+    lua_pushvalue(L, 2);
+    lua_setupvalue(L, -2, 1);
+    lua_call(L, 0, LUA_MULTRET);
+
     return 0;
 }
 
@@ -180,7 +189,9 @@ void Runtime::loadGlobals() {
     lua_settable(L, LUA_REGISTRYINDEX);
 }
 
-std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::vector<std::string> &filepaths) {
+std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &corepath,
+                                                     const std::string &modulepath) {
+
     // loadAndEvalueate can only be called once because it taints
     // the lua runtime
     assert(graph != nullptr);
@@ -188,11 +199,19 @@ std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::vector<std::stri
     loadLibs();
     loadGlobals();
 
-    for (auto file : filepaths) {
-        int err = luaL_dofile(L, file.c_str());
-        if (err) {
-            throw ConfigurationException(lua_tostring(L, -1));
-        }
+    if (luaL_dofile(L, corepath.c_str())) {
+        throw ConfigurationException(lua_tostring(L, -1));
+    }
+
+
+    int t = lua_getglobal(L, "submodule");
+    if (t != LUA_TFUNCTION) {
+        throw ConfigurationException("Problem loading core module at '" + corepath + "'");
+    }
+
+    lua_pushstring(L, modulepath.c_str());
+    if (lua_pcall(L, 1, LUA_MULTRET, 0)) {
+        throw ConfigurationException(lua_tostring(L, -1));
     }
 
     return std::move(graph);

@@ -14,12 +14,9 @@ int main(int argc, const char* argv[]) {
 
     Runtime runtime;
     std::unique_ptr<BuildGraph> graph;
-    std::vector<std::string> files {
-        argv[1], argv[2]
-    };
 
     try {
-        graph = runtime.loadAndEvaluate(files);
+        graph = runtime.loadAndEvaluate(argv[1], argv[2]);
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

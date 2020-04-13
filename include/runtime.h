@@ -31,8 +31,8 @@ class Runtime {
         // of the lua_State
         Runtime(const Runtime& other) = delete;
 
-        std::unique_ptr<BuildGraph> loadAndEvaluate(
-                const std::vector<std::string> &filepaths);
+        std::unique_ptr<BuildGraph> loadAndEvaluate(const std::string &corepath,
+                                                    const std::string &modulepath);
 };
 
 #endif

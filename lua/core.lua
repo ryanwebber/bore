@@ -20,18 +20,30 @@ end
 
 local assert_type = function(var, vtype, msg)
     if type(var) ~= vtype then
-        fatal("%s", msg)
+        fatal("%s (got: %s)", msg, type(var))
     end
+
+    return var
 end
 
-local assert_string =    function(var, msg) assert_type(var, "string", msg)   end
-local assert_table =     function(var, msg) assert_type(var, "table", msg)    end
-local assert_number =    function(var, msg) assert_type(var, "number", msg)   end
-local assert_function =  function(var, msg) assert_type(var, "function", msg) end
+local assert_string =    function(var, msg) return assert_type(var, "string", msg)   end
+local assert_table =     function(var, msg) return assert_type(var, "table", msg)    end
+local assert_number =    function(var, msg) return assert_type(var, "number", msg)   end
+local assert_function =  function(var, msg) return assert_type(var, "function", msg) end
 
 local assert_rule = function(var, msg)
     assert_type(var, "userdata", msg)
     -- TODO: Check the metatable for the rule
+end
+
+local assert_strings = function(var, msg)
+    if type(var) == "string" then
+        return { var }
+    elseif type(var) == "table" then
+        return var
+    else
+        fatal("%s (got: %s)", msg, type(var))
+    end
 end
 
 local validate = function(var, spec)
@@ -93,7 +105,13 @@ submodule = function (path)
         assert_string(path, "Submodule path must be a string")
     end)
 
-    _submodule(path)
+    local env = setmetatable({
+        test = "Hello"
+    }, {
+        __index = _G
+    })
+
+    _submodule(path, env)
 end
 
 -- TODO: This global should be provided by native land
@@ -117,22 +135,12 @@ target = function (args)
     _target(args)
 end
 
-local to_string_list = function(var, errmsg)
-    if type(var) == "string" then
-        return { var }
-    elseif type(var) == "table" then
-        return var
-    else
-        fatal("%s (got: %s)", errmsg, type(var))
-    end
-end
-
 defnrule("rule", {
     validator = function(args)
         return {
-            ins = to_string_list(args.ins, "Rule inputs should be a string array"),
-            outs = to_string_list(args.outs, "Rule outputs should be a string array"),
-            cmds = to_string_list(args.cmds, "Rule commands should be a string array"),
+            ins = assert_strings(args.ins, "Rule inputs should be a string array"),
+            outs = assert_strings(args.outs, "Rule outputs should be a string array"),
+            cmds = assert_strings(args.cmds, "Rule commands should be a string array"),
         }
     end,
     generator = function(args)
@@ -154,6 +162,7 @@ defnrule("phony", {
 bore = {
     -- Assertions
     assert_string = assert_string,
+    assert_strings = assert_strings,
     assert_number = assert_number,
     assert_function = assert_function,
     assert_table = assert_table,

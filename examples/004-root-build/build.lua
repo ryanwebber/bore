@@ -1,7 +1,9 @@
 
+print("Do we have globals? " .. test)
+
 -- Similar to require, but sets up the global
 -- build variable
-submodule("myLib/build.lia")
+-- submodule("myLib/build.lua")
 
 target {
     name = "greet",
