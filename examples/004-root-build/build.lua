@@ -23,14 +23,10 @@ target {
     }
 }
 
-print("Do we have target refs? " .. table.concat(targets["test1"].ins, ", "))
-print("Do we have target refs? " .. table.concat(targets["test1"].outs, ", "))
-print("Do we have target refs? " .. table.concat(targets["test1"].cmds, ", "))
-
 target {
     name = "test2",
     build = rule {
-        ins = "three",
+        ins = targets.test1.outs,
         outs = "fake",
         cmds = { "echo hi" }
     }

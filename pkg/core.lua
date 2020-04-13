@@ -33,7 +33,6 @@ local assert_function =  function(var, msg) return assert_type(var, "function", 
 
 local assert_rule = function(var, msg)
     assert_type(var, "userdata", msg)
-    -- TODO: Check the metatable for the rule
 end
 
 local assert_strings = function(var, msg)
@@ -130,11 +129,9 @@ target = function (args)
         assert_string(args.name, "Target name must be a string")
         assert_rule(args.build, "Target build property must be a rule")
 
-        --[[
         if targets[args.name] ~= nil then
             fatal("Target '%s' already defined", args.name)
         end
-        ]]
     end)
 
     _bore_target(args)
