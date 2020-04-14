@@ -4,6 +4,7 @@
 
 #include "runtime.h"
 #include "path.h"
+#include "fglob.h"
 #include "configuration_exception.h"
 
 static const char *kRuleMetatableMarker = "Bore.RuleMarker";
@@ -36,7 +37,6 @@ static int rule(lua_State *L) {
         }
 
         const char* cmd = lua_tostring(L, -1);
-        std::cerr << "Command: " << cmd << std::endl;
         rule.addCommand(cmd);
         lua_pop(L, 1);
     }
@@ -52,7 +52,6 @@ static int rule(lua_State *L) {
         }
 
         const char* output = lua_tostring(L, -1);
-        std::cerr << "Output: " << output << std::endl;
         rule.addOutput(output);
         lua_pop(L, 1);
     }
@@ -61,16 +60,23 @@ static int rule(lua_State *L) {
     lua_pop(L, 1);
 
     // Adding the inputs
+    std::vector<std::string> inputs;
     lua_pushnil(L);  /* first key */
     while (lua_next(L, -2) != 0) {
         if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
             luaL_argerror(L, 1, "Expected inputs to be a list of strings");
         }
 
-        const char* input = lua_tostring(L, -1);
-        std::cerr << "Input: " << input << std::endl;
-        rule.addInput(input);
+        const char* glob = lua_tostring(L, -1);
+        if (fglob(glob, inputs)) {
+            // TODO: log a warning or throw an error
+        }
+
         lua_pop(L, 1);
+    }
+
+    for (auto i : inputs) {
+        rule.addInput(i);
     }
 
     // Remember to do this one last time

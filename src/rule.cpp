@@ -1,4 +1,5 @@
 #include "rule.h"
+#include "fglob.h"
 
 void Rule::addInput(const std::string &input) {
     inputs.push_back(input);
