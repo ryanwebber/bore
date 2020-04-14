@@ -15,7 +15,7 @@ target {
 target {
     name = "test1",
     build = rule {
-        ins = path.join(module.local_dir, "test/*.txt"),
+        ins = glob(module.rel("test/*.txt")),
         outs = {"three", "four" },
         cmds = { "five", "six" }
     }

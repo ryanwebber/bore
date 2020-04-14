@@ -60,23 +60,15 @@ static int rule(lua_State *L) {
     lua_pop(L, 1);
 
     // Adding the inputs
-    std::vector<std::string> inputs;
     lua_pushnil(L);  /* first key */
     while (lua_next(L, -2) != 0) {
         if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
             luaL_argerror(L, 1, "Expected inputs to be a list of strings");
         }
 
-        const char* glob = lua_tostring(L, -1);
-        if (fglob(glob, inputs)) {
-            // TODO: log a warning or throw an error
-        }
-
+        const char* input = lua_tostring(L, -1);
+        rule.addInput(input);
         lua_pop(L, 1);
-    }
-
-    for (auto i : inputs) {
-        rule.addInput(i);
     }
 
     // Remember to do this one last time
@@ -202,6 +194,25 @@ static int find_target(lua_State *L) {
     return 1;
 }
 
+int glob(lua_State *L) {
+    const char* pattern = lua_tostring(L, 1);
+    std::vector<std::string> matches;
+    if (fglob(pattern, matches)) {
+        std::string err = std::string("Unable to match pathnames from glob: ") + pattern;
+        lua_pushstring(L, err.c_str());
+        lua_error(L);
+        return 0;
+    }
+
+    lua_newtable(L);
+    for (size_t i = 0; i < matches.size(); i++) {
+        lua_pushstring(L, matches[i].c_str());
+        lua_seti(L, -2, i + 1);
+    }
+
+    return 1;
+}
+
 Runtime::Runtime() {
     L = luaL_newstate();
     graph = std::make_unique<BuildGraph>();
@@ -241,6 +252,10 @@ void Runtime::loadGlobals() {
     // the global find target function
     lua_pushcfunction(L, find_target);
     lua_setglobal(L, "_bore_find_target");
+
+    // the global find target function
+    lua_pushcfunction(L, glob);
+    lua_setglobal(L, "_bore_glob");
 
     // push the build graph into the regustry
     lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);

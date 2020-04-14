@@ -63,7 +63,6 @@ local validate = function(var, spec)
     return t
 end
 
-
 -- A global list accumulating custom rule definitions
 local ruledefs = {}
 
@@ -99,6 +98,14 @@ defnrule = function(name, def)
 
 end
 
+glob = function(pattern)
+    doassert(function()
+        assert_string(pattern, "Glob pattern should be a string")
+    end)
+
+    return _bore_glob(pattern)
+end
+
 submodule = function (mod, relpath)
     doassert(function()
         assert_string(relpath, "Submodule path must be a string")
@@ -116,6 +123,20 @@ submodule = function (mod, relpath)
         root_build_dir = "",
         local_dir = local_dir,
         local_build_dir = "",
+        rel = function(p)
+            doassert(function()
+                assert_string(p, "Path must be a string")
+            end)
+
+            return path.join(local_dir, p)
+        end,
+        abs = function(p)
+            doassert(function()
+                assert_string(p, "Path must be a string")
+            end)
+
+            return path.join(root_dir, p)
+        end,
     }
 
     local env = setmetatable({ module = module }, { __index = _G })
