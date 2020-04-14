@@ -6,7 +6,7 @@ submodule(module, "templating/build.lua")
 target {
     name = "greet",
     build = rule {
-        ins = { path.join(module.local_dir, "${template.ins}") },
+        ins = { path.join(module.local_dir, "${template.outs}") },
         outs = { },
         cmds = { "cat ${ins}" }
     }

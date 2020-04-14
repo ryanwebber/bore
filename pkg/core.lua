@@ -87,11 +87,32 @@ local function varsub_tostr(obj)
 end
 
 local function varsub(str, data)
-    local i = str:gsub("${(%a%w*)}", function (key)
-        return varsub_tostr(data[key])
+    local i = str:gsub("${(%a[%w%.]*)}", function (key)
+        local value = data
+        for prop in key:gmatch("(%a%w*)") do
+            if prop:len() > 0 then
+                local v = value[prop]
+                if v == nil then
+                    return nil
+                end
+
+                value = v
+            end
+        end
+
+        return varsub_tostr(value)
     end)
 
     return varsub_tostr(i)
+end
+
+local function map(arr, fn)
+    local t = {}
+    for k, v in pairs(arr) do
+        t[k] = fn(k, v)
+    end
+
+    return t
 end
 
 -- A global list accumulating custom rule definitions
@@ -207,12 +228,32 @@ defnrule("rule", {
         }
     end,
     generator = function(args)
-        local cmds = {}
-        for k,v in pairs(args.cmds) do
-            cmds[k] = varsub(v, args)
-        end
 
-        return _bore_rule({ ins = args.ins, outs = args.outs, cmds = cmds })
+        local r = {
+            cmds = args.cmds,
+            ins = args.ins,
+            outs = args.outs
+        }
+
+        local data = setmetatable(r, {
+            __index = function(self, k)
+                local raw = rawget(self, k)
+                if raw ~= nil then
+                    return raw
+                end
+
+                return targets[k]
+            end
+        })
+
+        r.ins = map(r.ins, function(_, v) return varsub(v, data) end)
+        r.outs = map(r.outs, function(_, v) return varsub(v, data) end)
+
+        -- important that cmds comes last here, since we've alreadt expanded
+        -- the inputs and outputs
+        r.cmds = map(r.cmds, function(_, v) return varsub(v, data) end)
+
+        return _bore_rule(r)
     end
 })
 
