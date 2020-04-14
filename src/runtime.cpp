@@ -37,6 +37,7 @@ static int rule(lua_State *L) {
         }
 
         const char* cmd = lua_tostring(L, -1);
+        std::cerr << "Command: " << cmd << std::endl;
         rule.addCommand(cmd);
         lua_pop(L, 1);
     }
@@ -52,6 +53,7 @@ static int rule(lua_State *L) {
         }
 
         const char* output = lua_tostring(L, -1);
+        std::cerr << "Output: " << output << std::endl;
         rule.addOutput(output);
         lua_pop(L, 1);
     }
@@ -67,6 +69,7 @@ static int rule(lua_State *L) {
         }
 
         const char* input = lua_tostring(L, -1);
+        std::cerr << "Input: " << input << std::endl;
         rule.addInput(input);
         lua_pop(L, 1);
     }
@@ -78,6 +81,8 @@ static int rule(lua_State *L) {
     // return here anyways
     int s_top_end = lua_gettop(L);
     assert(s_top_start == s_top_end);
+
+    std::cerr << std::endl;
 
     // The rule userdatum is now on the top of the stack
     return 1;

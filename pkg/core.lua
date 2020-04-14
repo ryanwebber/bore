@@ -1,7 +1,7 @@
 
 -- Fails without a description of where the error occurs
 -- to avoid leaking internal details
-local fatal = function(...)
+local function fatal(...)
     local msg = string.format(...)
     error(msg, 0)
 end
@@ -9,7 +9,7 @@ end
 -- Catches any errors thrown anywere in the call hierarchy and re-throws them at the location
 -- of the callers caller. (ex. if A calls B(), and B calls assert(), then it throws
 -- the error in A's callsite of B
-local doassert = function(fn)
+local function doassert(fn)
     local success, results  = pcall(fn)
     if not success then
         error(results, 3)
@@ -18,7 +18,7 @@ local doassert = function(fn)
     return results
 end
 
-local assert_type = function(var, vtype, msg)
+local function assert_type(var, vtype, msg)
     if type(var) ~= vtype then
         fatal("%s (got: %s)", msg, type(var))
     end
@@ -26,16 +26,16 @@ local assert_type = function(var, vtype, msg)
     return var
 end
 
-local assert_string =    function(var, msg) return assert_type(var, "string", msg)   end
-local assert_table =     function(var, msg) return assert_type(var, "table", msg)    end
-local assert_number =    function(var, msg) return assert_type(var, "number", msg)   end
-local assert_function =  function(var, msg) return assert_type(var, "function", msg) end
+local function assert_string   (var, msg) return assert_type(var, "string", msg)   end
+local function assert_table    (var, msg) return assert_type(var, "table", msg)    end
+local function assert_number   (var, msg) return assert_type(var, "number", msg)   end
+local function assert_function (var, msg) return assert_type(var, "function", msg) end
 
-local assert_rule = function(var, msg)
+local function assert_rule(var, msg)
     assert_type(var, "userdata", msg)
 end
 
-local assert_strings = function(var, msg)
+local function assert_strings(var, msg)
     if type(var) == "string" then
         return { var }
     elseif type(var) == "table" then
@@ -45,7 +45,7 @@ local assert_strings = function(var, msg)
     end
 end
 
-local validate = function(var, spec)
+local function validate(var, spec)
     local t = {}
     for pname, pspec in pairs(spec) do
         if var[pname] == nil and pspec.required == true then
@@ -61,6 +61,37 @@ local validate = function(var, spec)
     end
 
     return t
+end
+
+local function varsub_tostr(obj)
+    if type(obj) == "string" then
+        return obj
+    elseif type(obj) == "number" then
+        return tostring(obj)
+    elseif type(obj) == "table" then
+        local str = ""
+        for _, p in pairs(obj) do
+            local possible = varsub_tostr(p)
+            if possible:len() > 0 then
+                if str:len() > 0 then
+                    str = str .. " "
+                end
+
+                str = str .. possible
+            end
+        end
+        return str
+    else
+        return ""
+    end
+end
+
+local function varsub(str, data)
+    local i = str:gsub("${(%a%w*)}", function (key)
+        return varsub_tostr(data[key])
+    end)
+
+    return varsub_tostr(i)
 end
 
 -- A global list accumulating custom rule definitions
@@ -176,7 +207,12 @@ defnrule("rule", {
         }
     end,
     generator = function(args)
-        return _bore_rule(args)
+        local cmds = {}
+        for k,v in pairs(args.cmds) do
+            cmds[k] = varsub(v, args)
+        end
+
+        return _bore_rule({ ins = args.ins, outs = args.outs, cmds = cmds })
     end
 })
 

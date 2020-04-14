@@ -26,7 +26,7 @@ target {
     build = rule {
         ins = targets.test1.outs,
         outs = "fake",
-        cmds = { "echo hi" }
+        cmds = { "echo ${ins}" }
     }
 }
 
