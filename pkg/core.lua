@@ -123,19 +123,19 @@ submodule = function (mod, relpath)
         root_build_dir = "",
         local_dir = local_dir,
         local_build_dir = "",
-        rel = function(p)
+        path = function(p)
             doassert(function()
                 assert_string(p, "Path must be a string")
             end)
 
             return path.join(local_dir, p)
         end,
-        abs = function(p)
+        glob = function(p)
             doassert(function()
-                assert_string(p, "Path must be a string")
+                assert_string(p, "Glob pattern must be a string")
             end)
 
-            return path.join(root_dir, p)
+            return glob(path.join(local_dir, p))
         end,
     }
 

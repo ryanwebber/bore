@@ -15,7 +15,7 @@ target {
 target {
     name = "test1",
     build = rule {
-        ins = glob(module.rel("test/*.txt")),
+        ins = module.glob("test/*.txt"),
         outs = {"three", "four" },
         cmds = { "five", "six" }
     }
