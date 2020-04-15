@@ -2,8 +2,10 @@
 #include <string>
 
 #include "runtime.h"
-#include "graph_generator.h"
 #include "configuration_exception.h"
+
+#include "graph_generator.h"
+#include "make_generator.h"
 
 int main(int argc, const char* argv[]) {
 
@@ -22,7 +24,7 @@ int main(int argc, const char* argv[]) {
         return 1;
     }
  
-    GraphGenerator g("build/deps.gviz");
+    MakeGenerator g("build/deps.gviz");
     g.generate(*graph);
 
     return 0;

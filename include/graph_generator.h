@@ -8,10 +8,10 @@
 
 class GraphGenerator: public Generator {
     private:
-        std::filesystem::path outfile;
+        std::filesystem::path root;
 
     public:
-        GraphGenerator(std::filesystem::path outfile);
+        GraphGenerator(std::filesystem::path root);
         ~GraphGenerator() = default;
 
         void generate(const BuildGraph &graph);

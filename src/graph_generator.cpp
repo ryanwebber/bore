@@ -3,7 +3,7 @@
 
 #define TAB "    "
 
-GraphGenerator::GraphGenerator(std::filesystem::path outfile): outfile(outfile) {}
+GraphGenerator::GraphGenerator(std::filesystem::path root): root(root) {}
 
 void GraphGenerator::generate(const BuildGraph &graph) {
     std::cerr << "digraph D {" << std::endl;
