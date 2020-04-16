@@ -17,7 +17,7 @@ extern "C" {
 struct RuntimeContext {
     const std::string corepath;
     const std::string modulepath;
-    std::map<std::string, std::string> params;
+    const std::map<std::string, std::string> params;
 };
 
 class Runtime {

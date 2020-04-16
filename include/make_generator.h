@@ -5,10 +5,12 @@
 
 #include "generator.h"
 #include "build_graph.h"
+#include "file_writer.h"
 
 class MakeGenerator: public Generator {
     private:
-        void generateRule(const std::string &name,
+        void generateRule(FileWriter &fw,
+                          const std::string &name,
                           const std::vector<std::string> &inputs,
                           const std::vector<std::string> &commands);
 
