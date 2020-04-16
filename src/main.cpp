@@ -4,6 +4,7 @@
 #include "runtime.h"
 #include "argopts.h"
 #include "configuration_exception.h"
+#include "generation_exception.h"
 
 #include "vendor/argparse.hpp"
 
@@ -41,11 +42,6 @@ int main(int argc, const char* argv[]) {
         .help("The root lua build descriptor file (defaults to build.lua).")
         .default_value(std::string("build.lua"));
 
-     program.add_argument("--no-clean")
-        .help("Don't generate an automatic clean target (enabled by default).")
-        .default_value(false)
-        .implicit_value(true);
-
     program.add_argument("--objects")
         .help("The main build folder for storing temporary build files (defaults to build/).");
 
@@ -63,6 +59,10 @@ int main(int argc, const char* argv[]) {
         .help("Output a Makefile for use with make")
         .default_value(false)
         .implicit_value(true);
+    
+    program.add_argument("--make-output")
+        .help("The Makefile to create when using the make generator  (defaults to Makefile)")
+        .default_value("Makefile");
 
     program.add_argument("--ninja")
         .help("Output a Makefile for use with make")
@@ -90,17 +90,23 @@ int main(int argc, const char* argv[]) {
     }
 
     std::vector<std::shared_ptr<Generator>> generators;
-    if (opts.get<bool>("--make"))
+
+    if (opts.get<bool>("--make")) 
         generators.push_back(std::make_shared<MakeGenerator>());
- 
-    if (opts.get<bool>("--graph"))
+
+    if (opts.get<bool>("--graph")) 
         generators.push_back(std::make_shared<GraphGenerator>());
 
     if (generators.empty())
         generators.push_back(std::make_shared<MakeGenerator>());
 
-    for (auto g : generators) {
-        g->generate(*graph, opts);
+    try {
+        for (auto g : generators) {
+            g->generate(*graph, opts);
+        }
+    } catch(GenerationException &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 1;
     }
 
     return 0;

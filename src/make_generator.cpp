@@ -3,11 +3,14 @@
 
 #include "make_generator.h"
 #include "file_writer.h"
+#include "generation_exception.h"
 
 #define TAB "\t"
 
 void MakeGenerator::generate(const BuildGraph &graph, ArgOpts &opts) {
-    FileWriter fw("tmp/Makefile2");
+
+    auto makefile = opts.get("--make-output");
+    FileWriter fw(makefile);
 
     std::set<std::string> phonies;
 

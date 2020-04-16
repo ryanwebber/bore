@@ -1,4 +1,3 @@
-#include <sstream>
 #include "configuration_exception.h"
 
 ConfigurationException::ConfigurationException(std::string msg):
