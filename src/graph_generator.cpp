@@ -3,7 +3,7 @@
 
 #define TAB "    "
 
-void GraphGenerator::generate(const BuildGraph &graph) {
+void GraphGenerator::generate(const BuildGraph &graph, ArgOpts &opts) {
     std::cerr << "digraph D {" << std::endl;
 
     for (auto target : graph.getTargets()) {

@@ -11,7 +11,7 @@ class GraphGenerator: public Generator {
         GraphGenerator() = default;
         ~GraphGenerator() = default;
 
-        void generate(const BuildGraph &graph);
+        void generate(const BuildGraph &graph, ArgOpts &opts);
 };
 
 #endif

@@ -16,7 +16,7 @@ class MakeGenerator: public Generator {
         MakeGenerator() = default;
         ~MakeGenerator() = default;
 
-        void generate(const BuildGraph &graph);
+        void generate(const BuildGraph &graph, ArgOpts &opts);
 };
 
 #endif

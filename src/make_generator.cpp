@@ -4,7 +4,7 @@
 
 #define TAB "\t"
 
-void MakeGenerator::generate(const BuildGraph &graph) {
+void MakeGenerator::generate(const BuildGraph &graph, ArgOpts &opts) {
     std::set<std::string> phonies;
 
     for (auto t : graph.getTargets()) {

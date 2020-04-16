@@ -2,6 +2,7 @@
 #include <string>
 
 #include "runtime.h"
+#include "argopts.h"
 #include "configuration_exception.h"
 
 #include "vendor/argparse.hpp"
@@ -76,28 +77,30 @@ int main(int argc, const char* argv[]) {
         return 1;
     }
 
+    ArgOpts opts(program);
+
     Runtime runtime;
     std::unique_ptr<BuildGraph> graph;
 
     try {
-        graph = runtime.loadAndEvaluate(COREPATH, program.get<std::string>("--build-file"));
+        graph = runtime.loadAndEvaluate(COREPATH, opts.get<std::string>("--build-file"));
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
 
     std::vector<std::shared_ptr<Generator>> generators;
-    if (program.get<bool>("--make"))
+    if (opts.get<bool>("--make"))
         generators.push_back(std::make_shared<MakeGenerator>());
  
-    if (program.get<bool>("--graph"))
+    if (opts.get<bool>("--graph"))
         generators.push_back(std::make_shared<GraphGenerator>());
 
     if (generators.empty())
         generators.push_back(std::make_shared<MakeGenerator>());
 
     for (auto g : generators) {
-        g->generate(*graph);
+        g->generate(*graph, opts);
     }
 
     return 0;
