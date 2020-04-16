@@ -82,8 +82,13 @@ int main(int argc, const char* argv[]) {
     Runtime runtime;
     std::unique_ptr<BuildGraph> graph;
 
+    RuntimeContext context = {
+        .corepath = COREPATH,
+        .modulepath = opts.get("--build-file"),
+    };
+
     try {
-        graph = runtime.loadAndEvaluate(COREPATH, opts.get<std::string>("--build-file"));
+        graph = runtime.loadAndEvaluate(context);
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

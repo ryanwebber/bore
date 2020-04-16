@@ -263,8 +263,7 @@ void Runtime::loadGlobals() {
     lua_settable(L, LUA_REGISTRYINDEX);
 }
 
-std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &corepath,
-                                                     const std::string &modulepath) {
+std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const RuntimeContext &context) {
 
     // loadAndEvalueate can only be called once because it taints
     // the lua runtime
@@ -273,17 +272,17 @@ std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &corepath
     loadLibs();
     loadGlobals();
 
-    if (luaL_dofile(L, corepath.c_str())) {
+    if (luaL_dofile(L, context.corepath.c_str())) {
         throw ConfigurationException(lua_tostring(L, -1));
     }
 
     int t = lua_getglobal(L, "submodule");
     if (t != LUA_TFUNCTION) {
-        throw ConfigurationException("Problem loading core module at '" + corepath + "'");
+        throw ConfigurationException("Problem loading core module at '" + std::string(context.corepath) + "'");
     }
 
     lua_pushnil(L);
-    lua_pushstring(L, modulepath.c_str());
+    lua_pushstring(L, context.modulepath.c_str());
     if (lua_pcall(L, 2, LUA_MULTRET, 0)) {
         throw ConfigurationException(lua_tostring(L, -1));
     }

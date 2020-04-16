@@ -1,6 +1,7 @@
 #ifndef RUNTIME_H
 #define RUNTIME_H
 
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -12,6 +13,12 @@ extern "C" {
     #include <lualib.h>
     #include <lauxlib.h>
 }
+
+struct RuntimeContext {
+    const std::string corepath;
+    const std::string modulepath;
+    std::map<std::string, std::string> params;
+};
 
 class Runtime {
 
@@ -31,8 +38,7 @@ class Runtime {
         // of the lua_State
         Runtime(const Runtime& other) = delete;
 
-        std::unique_ptr<BuildGraph> loadAndEvaluate(const std::string &corepath,
-                                                    const std::string &modulepath);
+        std::unique_ptr<BuildGraph> loadAndEvaluate(const RuntimeContext &context);
 };
 
 #endif
