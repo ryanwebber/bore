@@ -267,7 +267,8 @@ void Runtime::loadGlobals() {
     lua_settable(L, LUA_REGISTRYINDEX);
 }
 
-std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &buildpath) {
+std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &buildpath,
+                                                     const RuntimeConfiguration &conf) {
 
     // loadAndEvalueate can only be called once because it taints
     // the lua runtime
@@ -278,11 +279,16 @@ std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &buildpat
 
     size_t bundlelen = _binary_build_bundle_lua_end - _binary_build_bundle_lua_start;
     std::string data(_binary_build_bundle_lua_start, bundlelen);
-
-    if (luaL_dostring(L, data.c_str())) {
+    if(luaL_loadstring (L, data.c_str())) {
         throw ConfigurationException(lua_tostring(L, -1));
     }
 
+    // Add context to the chunk we just loaded and call it
+    lua_pushstring(L, conf.build_dir.c_str());
+    lua_setglobal(L, "_bore_build_path");
+    lua_call(L, 0, LUA_MULTRET);
+
+    // Finally, load the main build module as a submodule and call it
     lua_getglobal(L, "submodule");
     lua_pushnil(L);
     lua_pushstring(L, buildpath.c_str());

@@ -14,6 +14,10 @@ extern "C" {
     #include <lauxlib.h>
 }
 
+struct RuntimeConfiguration {
+    const std::string build_dir;
+};
+
 class Runtime {
 
     private:
@@ -26,13 +30,12 @@ class Runtime {
 
     public:
         Runtime();
+        Runtime(const Runtime& other) = delete;
         ~Runtime();
 
-        // Disable the copy constructor, or we'll mess up ownership
-        // of the lua_State
-        Runtime(const Runtime& other) = delete;
-
-        std::unique_ptr<BuildGraph> loadAndEvaluate(const std::string &buildpath);
+        std::unique_ptr<BuildGraph> loadAndEvaluate(
+                                        const std::string &buildpath,
+                                        const RuntimeConfiguration &conf);
 };
 
 #endif

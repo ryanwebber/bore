@@ -1,4 +1,6 @@
 
+local root_build_dir = _bore_build_path
+
 -- Fails without a description of where the error occurs
 -- to avoid leaking internal details
 local function fatal(...)
@@ -172,9 +174,9 @@ submodule = function (mod, relpath)
 
     local module = {
         root_dir = "",
-        root_build_dir = "",
+        root_build_dir = root_build_dir,
         local_dir = local_dir,
-        local_build_dir = "",
+        local_build_dir = path.join(root_build_dir, relpath),
         path = function(p)
             doassert(function()
                 assert_string(p, "Path must be a string")

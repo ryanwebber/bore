@@ -43,7 +43,8 @@ int main(int argc, const char* argv[]) {
         .default_value(std::string("build.lua"));
 
     program.add_argument("--objects")
-        .help("The main build folder for storing temporary build files (defaults to build/).");
+        .help("The main build folder for storing temporary build files (defaults to build/).")
+        .default_value(std::string("build/"));
 
     program.add_argument("-v", "--verbose")
         .help("Output verbose logs (defaults to false).")
@@ -80,10 +81,14 @@ int main(int argc, const char* argv[]) {
     ArgOpts opts(program);
 
     Runtime runtime;
+    RuntimeConfiguration conf = {
+        .build_dir = opts.get<std::string>("--objects")
+    };
+
     std::unique_ptr<BuildGraph> graph;
 
     try {
-        graph = runtime.loadAndEvaluate(opts.get("--build-file"));
+        graph = runtime.loadAndEvaluate(opts.get("--build-file"), conf);
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
