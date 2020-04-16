@@ -7,11 +7,8 @@
 #include "build_graph.h"
 
 class GraphGenerator: public Generator {
-    private:
-        std::filesystem::path root;
-
     public:
-        GraphGenerator(std::filesystem::path root);
+        GraphGenerator() = default;
         ~GraphGenerator() = default;
 
         void generate(const BuildGraph &graph);

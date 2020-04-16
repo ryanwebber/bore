@@ -23,7 +23,7 @@ $(TARGET): $(OBJECTS)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
-	$(CC) $(CFLAGS) $(INC) -c -o $@ $<
+	$(CC) $(CFLAGS) -DCOREPATH="\"pkg/core.lua\""  $(INC) -c -o $@ $<
 
 clean:
 	$(RM) -r $(BUILDDIR) $(TARGET)
