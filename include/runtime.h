@@ -14,12 +14,6 @@ extern "C" {
     #include <lauxlib.h>
 }
 
-struct RuntimeContext {
-    const std::string corepath;
-    const std::string modulepath;
-    const std::map<std::string, std::string> params;
-};
-
 class Runtime {
 
     private:
@@ -38,7 +32,7 @@ class Runtime {
         // of the lua_State
         Runtime(const Runtime& other) = delete;
 
-        std::unique_ptr<BuildGraph> loadAndEvaluate(const RuntimeContext &context);
+        std::unique_ptr<BuildGraph> loadAndEvaluate(const std::string &buildpath);
 };
 
 #endif

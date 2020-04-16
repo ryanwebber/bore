@@ -49,9 +49,6 @@ Generators:
  * Directory management
  * Automagic build regen
  * Ninja generation
- * Actual file output
- * CLI behaviour
- * Install configuration (of this actual project)
  * Pre-defined rules (c, c++, asm, etc)
  * Parameter configuration?
  * Documentation
