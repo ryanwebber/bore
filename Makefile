@@ -23,6 +23,7 @@ INC := -I $(INCDIR)
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
+	@mkdir -p bin
 	$(CC) $^ -o $(TARGET) $(LIB)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
@@ -34,6 +35,7 @@ $(LUA_BUNDLE): $(LUA_SOURCES)
 	cat $^ > $@
 
 $(LUA_OBJECT): $(LUA_BUNDLE)
+	@mkdir -p $(BUILDDIR)
 	ld -r -b binary -o $@ $<
 
 clean:

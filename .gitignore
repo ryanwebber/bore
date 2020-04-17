@@ -8,7 +8,8 @@ local/
 .DS_STORE
 
 # Ignore object files
-build
+build/
+bin/
 
 # Ignore generated libraries
 lib/*.so
