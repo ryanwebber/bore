@@ -4,44 +4,25 @@ tools such as make or ninja.
 
 ## Usage
 ```
-Bore - A boring build file generator.
+Usage: bore [--option] [--generator-option] <generator> [<generator>...]
 
-Consumes human-writable rule modules written in Lua, and generates corresponding
-build files for back-end build tools such as Make and Ninja.
+Consumes human-writable rule modules written in Lua, and generates corresponding build files for back-end build tools such as Make and Ninja.
+Bore will evaluate a top level lua file that will define the targets of this project.
 
-Usage: bore [--option] [--generator-options] <generator> [<generator>...]
+Optional arguments:
+    -h --help       	show this help message and exit
+    -b --build-file 	the root lua build descriptor file (defaults to build.lua).
+    -o --objects    	the main build folder for storing temporary build files (defaults to build/).
+    -v --verbose    	output verbose logs (defaults to false).
+    --graph         	output a dot graph file describing the dependency graph
+    --make          	output a Makefile for use with make
+    --ninja         	output a ninja build file for use with ninja
+    --make-output   	the Makefile to create when using the make generator  (defaults to Makefile)
 
-Options:
-    -h, --help                      Print this message and exit.
-
-    -c <dir>, --cwd <dir>           The root directory of the project. Unless the -b option is provided,
-                                    this directory should contain a file build.lua (default is the current
-                                    working directory).
-
-    -i <file>                       The build file to use for the project (default is build.lua)
-
-    --no-clean                      Prevent the generation of an automatic clean target
-
-    -o <dir>, --build-dir <dir>     The out-of-source build directory to use for out of source
-                                    build rules (default is the /build relative to the root directory of
-                                    the project).
-
-Generator Specific Options:
-    --make-file <file>              The output Makefile (default is Makefile).
-
-    --ninja-file <file>             The output ninja file (default is ninja.build).
-
-    --graph-file <file>             The output graph file (default is dependencies.dot).
-
-Generators:
-    --make                          Generates a Makefile for use with make. Will create a single Makefile
-                                    in the project root.
-
-    --ninja                         Generates a single ninja.build file for use with the Ninja build
-                                    tool.
-
-    --graph                         Generates a DOT graph file to describe the dependency graph.
-
+Supported Generators:
+    --make         Makefiles for use with make
+    --ninja        Ninja build files for use with ninja
+    --graph        Dependency graphs using DOT notation
 ```
 
 ## TODO
