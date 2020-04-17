@@ -14,16 +14,16 @@ void MakeGenerator::generate(const BuildGraph &graph, ArgOpts &opts) {
 
     std::set<std::string> phonies;
 
+    auto all = graph.findTarget("all");
+    if (all != NULL) {
+        generateRule(fw, all->getName(), all->getRule()->getInputs(), {});
+        *fw << std::endl;
+    }
+
     for (auto t : graph.getTargets()) {
         for (auto o : t->getRule()->getOutputs()) {
             generateRule(fw, o, t->getRule()->getInputs(), t->getRule()->getCommands());
-        }
-
-        // If there are no output file collisions with the target name,
-        // then add a phony target for it
-        if (graph.findTargetProducing(t->getName()) == NULL && t->getRule()->getInputs().size() > 0) {
-            generateRule(fw, t->getName(), t->getRule()->getInputs(), {});
-            phonies.insert(t->getName());
+            *fw << std::endl;
         }
     }
 
@@ -52,7 +52,5 @@ void MakeGenerator::generateRule(FileWriter &fw,
     for (auto c : commands) {
         *fw << TAB << c << std::endl;
     }
-
-    *fw << std::endl;
 }
 

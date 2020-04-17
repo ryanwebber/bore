@@ -41,7 +41,15 @@ local function assert_strings(var, msg)
     if type(var) == "string" then
         return { var }
     elseif type(var) == "table" then
-        return var
+        local strs = {}
+        for _, val in pairs(var) do
+            local extracted = assert_strings(val, msg)
+            for _, s in pairs(extracted) do
+                table.insert(strs, s)
+            end
+        end
+
+        return strs
     else
         fatal("%s (got: %s)", msg, type(var))
     end
@@ -171,18 +179,26 @@ submodule = function (mod, relpath)
     end
 
     local local_dir = path.dirname(buildfile)
+    local local_build_dir = path.join(root_build_dir, local_dir)
 
     local module = {
         root_dir = "",
         root_build_dir = root_build_dir,
         local_dir = local_dir,
-        local_build_dir = path.join(root_build_dir, relpath),
+        local_build_dir = local_build_dir,
         path = function(p)
             doassert(function()
                 assert_string(p, "Path must be a string")
             end)
 
             return path.join(local_dir, p)
+        end,
+        object = function(p)
+             doassert(function()
+                assert_string(p, "Path must be a string")
+            end)
+
+            return path.join(local_build_dir, p)
         end,
         glob = function(p)
             doassert(function()

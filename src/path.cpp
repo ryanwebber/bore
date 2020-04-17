@@ -12,10 +12,7 @@ static int path_join(lua_State *L) {
         base /= lua_tostring(L, i + 1);
     }
 
-    base.make_preferred();
-
     lua_pushstring(L, base.c_str());
-
     return 1;
 }
 
@@ -23,15 +20,40 @@ static int path_dirname(lua_State *L) {
     luaL_argcheck(L, lua_isstring(L, 1), 1, "File path should be a string");
     fs::path base(lua_tostring(L, 1));
     fs::path dir = base.parent_path();
-
     lua_pushstring(L, dir.c_str());
+    return 1;
+}
 
+static int path_basename(lua_State *L) {
+    luaL_argcheck(L, lua_isstring(L, 1), 1, "File path should be a string");
+    fs::path base(lua_tostring(L, 1));
+    fs::path name = base.stem();
+    lua_pushstring(L, name.c_str());
+    return 1;
+}
+
+static int path_filename(lua_State *L) {
+    luaL_argcheck(L, lua_isstring(L, 1), 1, "File path should be a string");
+    fs::path base(lua_tostring(L, 1));
+    fs::path name = base.filename();
+    lua_pushstring(L, name.c_str());
+    return 1;
+}
+
+static int path_extension(lua_State *L) {
+    luaL_argcheck(L, lua_isstring(L, 1), 1, "File path should be a string");
+    fs::path base(lua_tostring(L, 1));
+    fs::path name = base.extension();
+    lua_pushstring(L, name.c_str());
     return 1;
 }
 
 static const luaL_Reg libPath [] = {
     { "join",       path_join       },
     { "dirname",    path_dirname    },
+    { "basename",   path_basename   },
+    { "filename",   path_filename   },
+    { "extension",  path_extension  },
     { NULL,         NULL            }
 };
 

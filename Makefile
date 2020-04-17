@@ -8,7 +8,7 @@ BUILDDIR := build
 INCDIR := include
 TARGET := bin/$(NAME)
  
-LUA_SOURCES := pkg/core.lua $(shell find pkg/rules -type f -name *.lua)
+LUA_SOURCES := pkg/core.lua $(shell find pkg/rules -type f -name "*.lua")
 LUA_BUNDLE := $(BUILDDIR)/bundle.lua
 LUA_OBJECT := $(BUILDDIR)/__lua_embed.o
 
