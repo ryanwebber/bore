@@ -31,9 +31,9 @@ int main(int argc, const char* argv[]) {
     program.add_epilog(
             "\n"
             "Supported Generators:\n"
-            "    --make         Makefiles for use with make\n"
-            "    --ninja        Ninja build files for use with ninja\n"
-            "    --graph        Dependency graphs using DOT notation\n"
+            "    --make         generate Makefiles for use with make\n"
+            "    --ninja        generate ninja build files for use with ninja\n"
+            "    --graph        generate dependency graphs using DOT notation\n"
             );
 
     program.add_argument("-b", "--build-file")

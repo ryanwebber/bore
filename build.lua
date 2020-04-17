@@ -7,6 +7,8 @@ local lib = "-llua -lm -ldl"
 local bin = module.path("bin")
 local build = module.object()
 
+local prefix = "/usr/local"
+
 local obj_files = array.map(module.glob("src/*.cpp"), function (_, source)
     local t = target {
         name = source,
@@ -63,6 +65,18 @@ target {
     name = "all",
     build = phony {
         deps = { targets.bore }
+    }
+}
+
+target {
+    name = "install",
+    build = rule {
+        ins = targets.bore.outs,
+        outs = {},
+        cmds = {
+            "install -d " .. path.join(prefix, "bin"),
+            "install -C ${ins} " .. path.join(prefix, "bin")
+        }
     }
 }
 
