@@ -4,6 +4,9 @@ local cflags = "-g -std=c++17 -Wall"
 local include = "-I include"
 local lib = "-llua -lm -ldl"
 
+local bin = module.path("bin")
+local build = module.object()
+
 local obj_files = array.map(module.glob("src/*.cpp"), function (_, source)
     local t = target {
         name = source,
@@ -48,7 +51,7 @@ target {
     name = "bore",
     build = rule {
         ins = { obj_files, "${luaEmbed.outs}" },
-        outs = module.path(path.join("bin", "bore2")),
+        outs = path.join(bin, "bore2"),
         cmds = {
             "mkdir -p " .. module.path("bin/"),
             cc .. " ${ins} -o ${outs} " .. lib
@@ -60,6 +63,18 @@ target {
     name = "all",
     build = phony {
         deps = { targets.bore }
+    }
+}
+
+target {
+    name = "clean",
+    build = rule {
+        ins = {},
+        outs = {},
+        cmds = {
+            "rm -r " .. bin,
+            "rm -r " .. build
+        }
     }
 }
 
