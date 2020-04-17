@@ -10,7 +10,10 @@ local obj_files = array.map(module.glob("src/*.cpp"), function (_, source)
         build = rule {
             ins = source,
             outs = module.object(path.basename(source) .. ".o"),
-            cmds = table.concat({ cc, cflags, include, "-c", "-o", "${outs}", "${ins}" }, " ")
+            cmds = {
+                "mkdir -p " .. module.object(),
+                table.concat({ cc, cflags, include, "-c", "-o", "${outs}", "${ins}" }, " ")
+            }
         }
     }
 
@@ -22,7 +25,10 @@ target {
     build = rule {
         ins = { module.path("pkg/core.lua"), module.glob("pkg/**/*.lua") },
         outs = module.object("bundle.lua"),
-        cmds = "cat ${ins} > ${outs}"
+        cmds = {
+            "mkdir -p " .. module.object(),
+            "cat ${ins} > ${outs}"
+        }
     }
 }
 
@@ -31,7 +37,10 @@ target {
     build = rule {
         ins = targets.luaBundle.outs,
         outs = module.object("__lua_embed.o"),
-        cmds = "ld -r -b binary -o ${outs} ${ins}"
+        cmds = {
+            "mkdir -p " .. module.object(),
+            "ld -r -b binary -o ${outs} ${ins}"
+        }
     }
 }
 
@@ -40,7 +49,10 @@ target {
     build = rule {
         ins = { obj_files, "${luaEmbed.outs}" },
         outs = module.path(path.join("bin", "bore2")),
-        cmds = cc .. " ${ins} -o ${outs} " .. lib
+        cmds = {
+            "mkdir -p " .. module.path("bin/"),
+            cc .. " ${ins} -o ${outs} " .. lib
+        }
     }
 }
 

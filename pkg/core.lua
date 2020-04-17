@@ -186,26 +186,14 @@ submodule = function (mod, relpath)
         root_build_dir = root_build_dir,
         local_dir = local_dir,
         local_build_dir = local_build_dir,
-        path = function(p)
-            doassert(function()
-                assert_string(p, "Path must be a string")
-            end)
-
-            return path.join(local_dir, p)
+        path = function(...)
+            return path.join(local_dir, ...)
         end,
-        object = function(p)
-             doassert(function()
-                assert_string(p, "Path must be a string")
-            end)
-
-            return path.join(local_build_dir, p)
+        object = function(...)
+            return path.join(local_build_dir, ...)
         end,
-        glob = function(p)
-            doassert(function()
-                assert_string(p, "Glob pattern must be a string")
-            end)
-
-            return glob(path.join(local_dir, p))
+        glob = function(...)
+            return glob(path.join(local_dir, ...))
         end,
     }
 
