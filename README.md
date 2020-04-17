@@ -45,7 +45,8 @@ Generators:
 ```
 
 ## TODO
- * Clean rules
+ * Custom CLI parser?
+ * Group rules (replacing for loops)?
  * Directory management
  * Automagic build regen
  * Ninja generation

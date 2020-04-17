@@ -906,6 +906,7 @@ public:
                << "Optional arguments:\n";
 
       for (const auto &mOptionalArgument : parser.mOptionalArguments) {
+	stream << "    ";
         stream.width(tLongestArgumentLength);
         stream << mOptionalArgument;
       }

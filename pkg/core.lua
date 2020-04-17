@@ -235,6 +235,7 @@ target = function (args)
     end)
 
     _bore_target(args)
+    return targets[args.name]
 end
 
 defnrule("rule", {
@@ -284,6 +285,21 @@ bore = {
     assert_function = assert_function,
     assert_table = assert_table,
     validate = validate,
+}
+
+array = {
+    concat = function(...)
+        local t = {}
+        for _, ti in pairs(...) do
+            doassert(function () assert_table(ti, "Arg given to array.concat was not a table") end)
+            for _, el in pairs(ti) do
+                table.insert(t, el)
+            end
+        end
+
+        return t
+    end,
+    map = map
 }
 
 -- Update the global metatable to resolve the defined rules,

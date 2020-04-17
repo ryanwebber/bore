@@ -20,12 +20,10 @@ int main(int argc, const char* argv[]) {
             );
 
     program.add_description(
-            "Bore - A boring build file generator."
-            "\n\n"
             "Consumes human-writable rule modules written in Lua, "
             "and generates corresponding build files for back-end "
             "build tools such as Make and Ninja."
-            "\n\n"
+            "\n"
             "Bore will evaluate a top level lua file that will define "
             "the targets of this project."
             ); 
@@ -33,42 +31,42 @@ int main(int argc, const char* argv[]) {
     program.add_epilog(
             "\n"
             "Supported Generators:\n"
-            " * Makefiles for use with make (via --make)\n"
-            " * Ninja build files for use with ninja (via --ninja)\n"
-            " * Dependency graphs using DOT notation (via --graph)\n"
+            "    --make         Makefiles for use with make\n"
+            "    --ninja        Ninja build files for use with ninja\n"
+            "    --graph        Dependency graphs using DOT notation\n"
             );
 
     program.add_argument("-b", "--build-file")
-        .help("The root lua build descriptor file (defaults to build.lua).")
+        .help("the root lua build descriptor file (defaults to build.lua).")
         .default_value(std::string("build.lua"));
 
-    program.add_argument("--objects")
-        .help("The main build folder for storing temporary build files (defaults to build/).")
+    program.add_argument("-o", "--objects")
+        .help("the main build folder for storing temporary build files (defaults to build/).")
         .default_value(std::string("build/"));
 
     program.add_argument("-v", "--verbose")
-        .help("Output verbose logs (defaults to false).")
+        .help("output verbose logs (defaults to false).")
         .default_value(false)
         .implicit_value(true);
 
     program.add_argument("--graph")
-        .help("Output a dot graph file describing the dependency graph")
+        .help("output a dot graph file describing the dependency graph")
         .default_value(false)
         .implicit_value(true);
 
     program.add_argument("--make")
-        .help("Output a Makefile for use with make")
+        .help("output a Makefile for use with make")
         .default_value(false)
         .implicit_value(true);
-    
-    program.add_argument("--make-output")
-        .help("The Makefile to create when using the make generator  (defaults to Makefile)")
-        .default_value("Makefile");
 
     program.add_argument("--ninja")
-        .help("Output a Makefile for use with make")
+        .help("output a ninja build file for use with ninja")
         .default_value(false)
         .implicit_value(true);
+
+    program.add_argument("--make-output")
+        .help("the Makefile to create when using the make generator  (defaults to Makefile)")
+        .default_value(std::string("Makefile"));
 
     try {
         program.parse_args(argc, argv);

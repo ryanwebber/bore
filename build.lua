@@ -4,7 +4,18 @@ local cflags = "-g -std=c++17 -Wall"
 local include = "-I include"
 local lib = "-llua -lm -ldl"
 
-local obj_files = {}
+local obj_files = array.map(module.glob("src/*.cpp"), function (_, source)
+    local t = target {
+        name = source,
+        build = rule {
+            ins = source,
+            outs = module.object(path.basename(source) .. ".o"),
+            cmds = table.concat({ cc, cflags, include, "-c", "-o", "${outs}", "${ins}" }, " ")
+        }
+    }
+
+    return t.outs
+end)
 
 target {
     name = "luaBundle",
@@ -24,33 +35,10 @@ target {
     }
 }
 
-for _, source in pairs(module.glob("src/*.cpp")) do
-    target {
-        name = source,
-        build = rule {
-            ins = source,
-            outs = module.object(path.basename(source) .. ".o"),
-            cmds = table.concat({
-                cc,
-                cflags,
-                include,
-                "-c",
-                "-o",
-                "${outs}",
-                "${ins}",
-            }, " ")
-        }
-    }
-
-    for _, v in pairs(targets[source].outs) do table.insert(obj_files, v) end
-end
-
-for _, v in pairs(targets.luaEmbed.outs) do table.insert(obj_files, v) end
-
 target {
     name = "bore",
     build = rule {
-        ins = obj_files,
+        ins = { obj_files, "${luaEmbed.outs}" },
         outs = module.path(path.join("bin", "bore2")),
         cmds = cc .. " ${ins} -o ${outs} " .. lib
     }
