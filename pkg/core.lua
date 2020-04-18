@@ -130,8 +130,11 @@ local array = {
     end,
     map = function(arr, fn)
         local t = {}
+        local i = 1
         for k, v in pairs(arr) do
-            t[k] = fn(k, v)
+            local k0, v0 = fn(k, v, i)
+            t[k0] = v0
+            i = i + 1
         end
 
         return t
@@ -249,10 +252,22 @@ defnrule("rule", {
     end,
     generator = function(args)
 
+        local dirs = args.dirs
+        if type(dirs) ~= "table" then
+            local dirset = array.map(args.outs, function(_, p)
+                return path.dirname(p), 1
+            end)
+
+            dirs = array.map(dirset, function(k, _, i)
+                return i, k
+            end)
+        end
+
         local r = {
             cmds = args.cmds,
             ins = args.ins,
-            outs = args.outs
+            outs = args.outs,
+            dirs = dirs
         }
 
         local data = setmetatable(r, {
@@ -266,10 +281,8 @@ defnrule("rule", {
             end
         })
 
-        -- The order we varsub these is important
-        r.ins = array.map(r.ins, function(_, v) return varsub(v, data) end)
-        r.outs = array.map(r.outs, function(_, v) return varsub(v, data) end)
-        r.cmds = array.map(r.cmds, function(_, v) return varsub(v, data) end)
+        -- We varsub only the commands array
+        r.cmds = array.map(r.cmds, function(k, v) return k, varsub(v, data) end)
 
         return _bore_rule(r)
     end

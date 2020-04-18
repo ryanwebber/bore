@@ -9,7 +9,7 @@ local build = module.object()
 
 local prefix = "/usr/local"
 
-local obj_files = array.map(module.glob("src/*.cpp"), function (_, source)
+local obj_files = array.map(module.glob("src/*.cpp"), function (i, source)
     local t = target {
         name = source,
         build = rule {
@@ -22,7 +22,7 @@ local obj_files = array.map(module.glob("src/*.cpp"), function (_, source)
         }
     }
 
-    return t.outs
+    return i, t.outs
 end)
 
 target {
@@ -52,7 +52,7 @@ target {
 target {
     name = "bore",
     build = rule {
-        ins = { obj_files, "${luaEmbed.outs}" },
+        ins = { obj_files, targets.luaEmbed.outs },
         outs = path.join(bin, "bore2"),
         cmds = {
             "mkdir -p " .. module.path("bin/"),
