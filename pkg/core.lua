@@ -116,20 +116,33 @@ local function varsub(str, data)
     return varsub_tostr(i)
 end
 
-local function map(arr, fn)
-    local t = {}
-    for k, v in pairs(arr) do
-        t[k] = fn(k, v)
-    end
+local array = {
+    concat = function(...)
+        local t = {}
+        for _, ti in pairs(...) do
+            doassert(function () assert_table(ti, "Arg given to array.concat was not a table") end)
+            for _, el in pairs(ti) do
+                table.insert(t, el)
+            end
+        end
 
-    return t
-end
+        return t
+    end,
+    map = function(arr, fn)
+        local t = {}
+        for k, v in pairs(arr) do
+            t[k] = fn(k, v)
+        end
+
+        return t
+    end
+}
 
 -- A global list accumulating custom rule definitions
 local ruledefs = {}
 
 -- The core lua component that makes build modules spit out the build tree
-defnrule = function(name, def)
+local defnrule = function(name, def)
 
     doassert(function()
         assert_string(name, "Rule name must be a string")
@@ -160,7 +173,7 @@ defnrule = function(name, def)
 
 end
 
-glob = function(pattern)
+local glob = function(pattern)
     doassert(function()
         assert_string(pattern, "Glob pattern should be a string")
     end)
@@ -168,7 +181,7 @@ glob = function(pattern)
     return _bore_glob(pattern)
 end
 
-submodule = function (mod, relpath)
+local submodule = function (mod, relpath)
     doassert(function()
         assert_string(relpath, "Submodule path must be a string")
     end)
@@ -201,7 +214,7 @@ submodule = function (mod, relpath)
     _bore_submodule(buildfile, env)
 end
 
-targets = setmetatable({}, {
+local targets = setmetatable({}, {
     __index = function(_, name)
         doassert(function()
             assert_string(name, "Target index must be a string")
@@ -211,7 +224,7 @@ targets = setmetatable({}, {
     end
 })
 
-target = function (args)
+local target = function (args)
     doassert(function()
         assert_table(args, "Target args must be a table")
         assert_string(args.name, "Target name must be a string")
@@ -253,41 +266,34 @@ defnrule("rule", {
             end
         })
 
-        r.ins = map(r.ins, function(_, v) return varsub(v, data) end)
-        r.outs = map(r.outs, function(_, v) return varsub(v, data) end)
-
-        -- important that cmds comes last here, since we've alreadt expanded
-        -- the inputs and outputs
-        r.cmds = map(r.cmds, function(_, v) return varsub(v, data) end)
+        -- The order we varsub these is important
+        r.ins = array.map(r.ins, function(_, v) return varsub(v, data) end)
+        r.outs = array.map(r.outs, function(_, v) return varsub(v, data) end)
+        r.cmds = array.map(r.cmds, function(_, v) return varsub(v, data) end)
 
         return _bore_rule(r)
     end
 })
 
 -- Setup global utilities
-bore = {
+local assert = {
     -- Assertions
-    assert_string = assert_string,
-    assert_strings = assert_strings,
-    assert_number = assert_number,
-    assert_function = assert_function,
-    assert_table = assert_table,
-    validate = validate,
+    is_string = assert_string,
+    is_strings = assert_strings,
+    is_number = assert_number,
+    is_function = assert_function,
+    is_table = assert_table,
+    bubble = doassert
 }
 
-array = {
-    concat = function(...)
-        local t = {}
-        for _, ti in pairs(...) do
-            doassert(function () assert_table(ti, "Arg given to array.concat was not a table") end)
-            for _, el in pairs(ti) do
-                table.insert(t, el)
-            end
-        end
-
-        return t
-    end,
-    map = map
+local globals = {
+    array = array,
+    assert = assert,
+    defnrule = defnrule,
+    fatal = fatal,
+    submodule = submodule,
+    target = target,
+    targets = targets,
 }
 
 -- Update the global metatable to resolve the defined rules,
@@ -297,6 +303,8 @@ setmetatable(_G, {
         local value = rawget(_G, k)
         if value ~= nil then
             return value
+        elseif globals[k] ~= nil then
+            return globals[k]
         elseif type(ruledefs[k]) == "function" then
             return ruledefs[k]
         else
