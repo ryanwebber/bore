@@ -13,6 +13,10 @@ void Rule::addCommand(const std::string &command) {
     commands.push_back(command);
 }
 
+void Rule::addDir(const std::string &dir) {
+    dirs.push_back(dir);
+}
+
 std::vector<std::string> Rule::getOutputs() const {
     return outputs;
 }
@@ -23,5 +27,9 @@ std::vector<std::string> Rule::getInputs() const {
 
 std::vector<std::string> Rule::getCommands() const {
     return commands;
+}
+
+std::vector<std::string> Rule::getDirs() const {
+    return dirs;
 }
 

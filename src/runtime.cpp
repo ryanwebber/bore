@@ -29,6 +29,7 @@ static int rule(lua_State *L) {
 
     int s_top_start = lua_gettop(L);
 
+    lua_getfield(L, 1, "dirs");
     lua_getfield(L, 1, "ins");
     lua_getfield(L, 1, "outs");
     lua_getfield(L, 1, "cmds");
@@ -72,6 +73,21 @@ static int rule(lua_State *L) {
 
         const char* input = lua_tostring(L, -1);
         rule.addInput(input);
+        lua_pop(L, 1);
+    }
+
+    // Pop back to dirs
+    lua_pop(L, 1);
+
+    // Adding the dirs
+    lua_pushnil(L);  /* first key */
+    while (lua_next(L, -2) != 0) {
+        if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
+            luaL_argerror(L, 1, "Expected dirs to be a list of strings");
+        }
+
+        const char* dir = lua_tostring(L, -1);
+        rule.addDir(dir);
         lua_pop(L, 1);
     }
 

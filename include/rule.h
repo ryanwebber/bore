@@ -9,6 +9,7 @@ class Rule {
         std::vector<std::string> inputs;
         std::vector<std::string> outputs;
         std::vector<std::string> commands;
+        std::vector<std::string> dirs;
 
     public:
         Rule() = default;
@@ -18,10 +19,12 @@ class Rule {
         void addInput(const std::string &input);
         void addOutput(const std::string &output);
         void addCommand(const std::string &command);
+        void addDir(const std::string &dir);
 
         std::vector<std::string> getOutputs() const;
         std::vector<std::string> getInputs() const;
         std::vector<std::string> getCommands() const;
+        std::vector<std::string> getDirs() const;
 };
 
 #endif
