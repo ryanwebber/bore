@@ -12,6 +12,7 @@ class MakeGenerator: public Generator {
         void generateRule(FileWriter &fw,
                           const std::string &name,
                           const std::vector<std::string> &inputs,
+                          const std::vector<std::string> &dirs,
                           const std::vector<std::string> &commands);
 
     public:
