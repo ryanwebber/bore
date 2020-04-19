@@ -3,6 +3,7 @@
 
 #include "runtime.h"
 #include "argopts.h"
+#include "argscan.h"
 #include "configuration_exception.h"
 #include "generation_exception.h"
 
@@ -12,6 +13,31 @@
 #include "make_generator.h"
 
 int main(int argc, const char* argv[]) {
+
+    auto s = ArgScanner()
+        .withOption("-s", "--long", 1, [](const char* arg[], int argc) {
+            for (int i = 0; i < argc; i++) {
+                std::cerr << arg[i] << " ";
+            }
+
+            std::cerr << std::endl;
+        })
+        .withOption("-n", "--nnnn", 2, [](const char* arg[], int argc) {
+            for (int i = 0; i < argc; i++) {
+                std::cerr << arg[i] << " ";
+            }
+
+            std::cerr << std::endl;
+        });
+
+    try {
+        s.scan(argc, argv);
+    } catch(ArgScanException &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        return 2;
+    }
+
+    return 0;
 
     argparse::ArgumentParser program("bore");
     program.add_usage(
