@@ -67,7 +67,7 @@ void MakeGenerator::generate(const BuildGraph &graph, ArgOpts &opts) {
             phonies.insert(name);
 
             if (all == NULL || all->getName() != name) {
-                generateRule(fw, name, {}, {}, t->getRule()->getCommands());
+                generateRule(fw, name, t->getRule()->getInputs(), {}, t->getRule()->getCommands());
                 *fw << std::endl;
             }
         }
