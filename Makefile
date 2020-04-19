@@ -42,7 +42,7 @@ clean:
 	$(RM) -r $(BUILDDIR) $(TARGET)
 
 test:
-	@echo "Testing not supported"
+	test/sanity/maketest -r . -t /tmp/bore/maketest
 
-.PHONY: clean all
+.PHONY: test clean all
 

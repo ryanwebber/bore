@@ -88,3 +88,16 @@ target {
     }
 }
 
+target {
+    name = "test",
+    build = rule {
+        ins = {},
+        outs = {},
+        cmds = {
+            string.format("%s -r %s -t /tmp/bore/maketest",
+                module.path("test", "sanity", "maketest"),
+                module.path("."))
+        }
+    }
+}
+
