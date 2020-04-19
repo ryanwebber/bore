@@ -5,6 +5,9 @@ set -e
 usage() {
     echo "Usage: $0 [--tmp-dir] [--cwd]"
     echo
+    echo "Builds the repo with a generated Makefile, and ensures the generated binary"
+    echo "produces an identical Makefile to the first."
+    echo
     echo "Options:"
     echo "  -t, --tmp-dir       A directory to use for temporary files"
     echo '  -r, --repo-dir      The root directory of the repository (defaults to $CWD)'
