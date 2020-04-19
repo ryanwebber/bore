@@ -26,12 +26,8 @@ Supported Generators:
 ```
 
 ## TODO
- * Custom CLI parser?
- * Group rules (replacing for loops)?
- * Directory management
- * Automagic build regen
  * Ninja generation
- * Pre-defined rules (c, c++, asm, etc)
+ * Rules (c, c++, asm, etc)
  * Parameter configuration?
  * Documentation
  * Examples

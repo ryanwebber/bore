@@ -1,5 +1,6 @@
 
 local root_build_dir = _bore_build_path
+local root_proj_dir = _bore_project_path
 
 -- Fails without a description of where the error occurs
 -- to avoid leaking internal details
@@ -190,15 +191,16 @@ local submodule = function (mod, relpath)
     end)
 
     local buildfile = relpath
+    local local_dir = root_proj_dir
     if mod ~= nil then
         buildfile = path.join(mod.local_dir, relpath)
+        local_dir = path.dirname(buildfile)
     end
 
-    local local_dir = path.dirname(buildfile)
     local local_build_dir = path.join(root_build_dir, local_dir)
 
     local module = {
-        root_dir = "",
+        root_dir = root_proj_dir,
         root_build_dir = root_build_dir,
         local_dir = local_dir,
         local_build_dir = local_build_dir,

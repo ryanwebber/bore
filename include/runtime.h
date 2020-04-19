@@ -15,6 +15,7 @@ extern "C" {
 }
 
 struct RuntimeConfiguration {
+    const std::string root_dir;
     const std::string build_dir;
 };
 

@@ -302,6 +302,8 @@ std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &buildpat
     // Add context to the chunk we just loaded and call it
     lua_pushstring(L, conf.build_dir.c_str());
     lua_setglobal(L, "_bore_build_path");
+    lua_pushstring(L, conf.root_dir.c_str());
+    lua_setglobal(L, "_bore_project_path");
     lua_call(L, 0, LUA_MULTRET);
 
     // Finally, load the main build module as a submodule and call it

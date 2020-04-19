@@ -36,11 +36,14 @@ int main(int argc, const char* argv[]) {
             "    --graph        generate dependency graphs using DOT notation\n"
             );
 
-    program.add_argument("-b", "--build-file")
-        .help("the root lua build descriptor file (defaults to build.lua).")
-        .default_value(std::string("build.lua"));
+    program.add_argument("-C", "--directory")
+        .help("the relative root for build paths in the project (defaults to $CWD)")
+        .default_value(std::string(""));
 
-    program.add_argument("-o", "--objects")
+    program.add_argument("-f", "--file")
+        .help("the root lua build descriptor file (defaults to $CWD/build.lua).");
+
+    program.add_argument("-o", "--object_dir")
         .help("the main build folder for storing temporary build files (defaults to build/).")
         .default_value(std::string("build/"));
 
@@ -80,13 +83,21 @@ int main(int argc, const char* argv[]) {
 
     Runtime runtime;
     RuntimeConfiguration conf = {
-        .build_dir = opts.get<std::string>("--objects")
+        .root_dir = opts.get("--directory"),
+        .build_dir = opts.get("--object_dir")
     };
 
     std::unique_ptr<BuildGraph> graph;
 
     try {
-        graph = runtime.loadAndEvaluate(opts.get("--build-file"), conf);
+        std::string f;
+        if (program.present("--file")) {
+            f = opts.get("--file");
+        } else {
+            f = std::filesystem::path(conf.root_dir) / "build.lua";
+        }
+
+        graph = runtime.loadAndEvaluate(f, conf);
     } catch (ConfigurationException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
