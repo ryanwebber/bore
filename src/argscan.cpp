@@ -1,3 +1,6 @@
+#include <sstream>
+#include <iostream>
+
 #include "argscan.h"
 
 ArgScanner& ArgScanner::withOption(
@@ -16,7 +19,7 @@ ArgScanner& ArgScanner::withOption(
         const int argc,
         const OptionCallback cb) {
 
-    defs[name].argc = 0;
+    defs[name].argc = argc;
     defs[name].cb = cb;
     return *this;
 }
@@ -31,6 +34,14 @@ void ArgScanner::scan(int argc, const char* argv[]) {
         }
 
         auto def = defs.at(arg);
+        if (i + def.argc >= argc) {
+            std::stringstream ss;
+            ss << "Option '" << arg << "' expects " << def.argc << " arguments but got " << (argc - i - 1);
+            throw ArgScanException(ss.str());
+        }
+
+        std::cerr << arg << " " << def.argc << std::endl;
+
         i++;
     }
 }
