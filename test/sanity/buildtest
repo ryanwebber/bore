@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -e
+
+usage() {
+    echo "Usage: $0 [--tmp-dir] [--cwd]"
+    echo
+    echo "Options:"
+    echo "  -t, --tmp-dir       A directory to use for temporary files"
+    echo '  -r, --repo-dir      The root directory of the repository (defaults to $CWD)'
+    echo '  -h, --help          Print this message and exit'
+    echo
+}
+
+PRIMER="Sanity Test"
+STEPS="7"
+
+REPO=.
+DIR=/tmp/bore/buildtest
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+        -t|--tmp-dir)
+            DIR="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        -r|--repo-dir)
+            REPO="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        -h|--help)
+            usage
+            exit 3
+        ;;
+        *)    # unknown option
+            echo "Unknown option: $1"
+            echo
+            usage
+            exit 2
+        ;;
+    esac
+done
+
+echo "$PRIMER [1/$STEPS]: Creating tmp environment..."
+rm -rf "$DIR" > /dev/null 2>&1
+mkdir -p "$DIR"
+mkdir "$DIR/out"
+
+echo "$PRIMER [2/$STEPS]: Copying source files..."
+cp -r "$REPO/src" "$REPO/pkg" "$REPO/include" "$REPO/Makefile" "$REPO/build.lua" "$DIR"
+
+echo "$PRIMER [3/$STEPS]: Building first binary..."
+make -C "$DIR" > /dev/null
+
+echo "$PRIMER [4/$STEPS]: Generating first Makefile..."
+sh -c "cd $DIR && ./bin/bore --make-output $DIR/out/Makefile_gen"
+make -C "$DIR" clean > /dev/null
+
+echo "$PRIMER [5/$STEPS]: Building second binary..."
+make -f "$DIR/out/Makefile_gen" -C "$DIR" > /dev/null
+
+echo "$PRIMER [6/$STEPS]: Generating second Makefile..."
+sh -c "cd $DIR && ./bin/bore2 --make-output $DIR/out/Makefile_gen2"
+
+echo "$PRIMER [7/$STEPS]: Checking Makefile diffs"
+diff "$DIR/out/Makefile_gen" "$DIR/out/Makefile_gen2"
+
