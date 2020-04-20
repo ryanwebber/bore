@@ -61,14 +61,14 @@ echo "$PRIMER [3/$STEPS]: Building first binary..."
 make -C "$DIR" > /dev/null
 
 echo "$PRIMER [4/$STEPS]: Generating first Makefile..."
-sh -c "cd $DIR && ./bin/bore --make-output $DIR/out/Makefile_gen"
+sh -c "cd $DIR && ./bin/bore --make-makefile $DIR/out/Makefile_gen"
 make -C "$DIR" clean > /dev/null
 
 echo "$PRIMER [5/$STEPS]: Building second binary..."
 make -f "$DIR/out/Makefile_gen" -C "$DIR" > /dev/null
 
 echo "$PRIMER [6/$STEPS]: Generating second Makefile..."
-sh -c "cd $DIR && ./bin/bore2 --make-output $DIR/out/Makefile_gen2"
+sh -c "cd $DIR && ./bin/bore2 --make-makefile $DIR/out/Makefile_gen2"
 
 echo "$PRIMER [7/$STEPS]: Checking Makefile diffs"
 diff "$DIR/out/Makefile_gen" "$DIR/out/Makefile_gen2"

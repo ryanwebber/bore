@@ -8,10 +8,35 @@
 
 #define TAB "\t"
 
-void MakeGenerator::generate(const BuildGraph &graph, ArgOpts &opts) {
+void generateRule(
+        FileWriter &fw,
+        const std::string &name,
+        const std::vector<std::string> &inputs,
+        const std::vector<std::string> &dirs,
+        const std::vector<std::string> &commands) {
 
-    auto makefile = opts.get("--make-output");
-    FileWriter fw(makefile);
+    *fw << name << ":";
+    for (auto i : inputs) {
+        *fw << " " << i;
+    }
+
+    if (!dirs.empty()) {
+        *fw << " |";
+        for (auto d : dirs) {
+            *fw << " " << d;
+        }
+    }
+
+    *fw << std::endl;
+
+    for (auto c : commands) {
+        *fw << TAB << c << std::endl;
+    }
+}
+
+void make_generate(const BuildGraph &graph, const MakeOpts &opts) {
+
+    FileWriter fw(opts.makefile);
 
     std::set<std::string> phonies;
     std::set<std::string> dirs;
@@ -84,31 +109,6 @@ void MakeGenerator::generate(const BuildGraph &graph, ArgOpts &opts) {
         }
 
         *fw << std::endl << std::endl;
-    }
-}
-
-void MakeGenerator::generateRule(FileWriter &fw,
-                                 const std::string &name,
-                                 const std::vector<std::string> &inputs,
-                                 const std::vector<std::string> &dirs,
-                                 const std::vector<std::string> &commands) {
-
-    *fw << name << ":";
-    for (auto i : inputs) {
-        *fw << " " << i;
-    }
-
-    if (!dirs.empty()) {
-        *fw << " |";
-        for (auto d : dirs) {
-            *fw << " " << d;
-        }
-    }
-
-    *fw << std::endl;
-
-    for (auto c : commands) {
-        *fw << TAB << c << std::endl;
     }
 }
 
