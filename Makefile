@@ -1,7 +1,7 @@
 
 NAME := bore
 
-CC := g++-9
+CC := gcc
 
 SRCDIR := src
 BUILDDIR := build
@@ -12,11 +12,11 @@ LUA_SOURCES := pkg/core.lua $(shell find pkg/rules -type f -name "*.lua")
 LUA_BUNDLE := $(BUILDDIR)/bundle.lua
 LUA_OBJECT := $(BUILDDIR)/__lua_embed.o
 
-SRCEXT := cpp
+SRCEXT := c
 HEXT := h
 SOURCES := $(shell find $(SRCDIR) -type f -name *.$(SRCEXT))
 OBJECTS := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.o)) $(LUA_OBJECT)
-CFLAGS := -g -std=c++17 -Wall
+CFLAGS := -g -Wall
 LIB := -llua -lm -ldl 
 INC := -I $(INCDIR)
 

@@ -3,7 +3,7 @@
 
 #include "build_graph.h"
 
-void graph_generate(const BuildGraph &graph);
+void graph_generate(struct BuildGraph *graph);
 
 #endif
 

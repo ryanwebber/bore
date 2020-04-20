@@ -1,5 +1,9 @@
-#include <string>
-#include <vector>
+#ifndef FGLOB_H
+#define FGLOB_H
 
-int fglob(const std::string &pattern, std::vector<std::string> &results);
+#include "list.h"
+
+int fglob(const char *pattern, struct List *l);
+
+#endif
 

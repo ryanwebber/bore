@@ -58,14 +58,14 @@ echo "$PRIMER [2/$STEPS]: Copying source files..."
 cp -r "$REPO/src" "$REPO/pkg" "$REPO/include" "$REPO/Makefile" "$REPO/build.lua" "$DIR"
 
 echo "$PRIMER [3/$STEPS]: Building first binary..."
-make -C "$DIR" > /dev/null
+make -C "$DIR"
 
 echo "$PRIMER [4/$STEPS]: Generating first Makefile..."
 sh -c "cd $DIR && ./bin/bore --make-makefile $DIR/out/Makefile_gen"
-make -C "$DIR" clean > /dev/null
+make -C "$DIR" clean
 
 echo "$PRIMER [5/$STEPS]: Building second binary..."
-make -f "$DIR/out/Makefile_gen" -C "$DIR" > /dev/null
+make -f "$DIR/out/Makefile_gen" -C "$DIR"
 
 echo "$PRIMER [6/$STEPS]: Generating second Makefile..."
 sh -c "cd $DIR && ./bin/bore2 --make-makefile $DIR/out/Makefile_gen2"

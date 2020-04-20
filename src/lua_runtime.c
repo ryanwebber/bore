@@ -1,11 +1,12 @@
-#include <cassert>
-#include <iostream>
-#include <filesystem>
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "runtime.h"
-#include "path.h"
-#include "fglob.h"
-#include "configuration_exception.h"
+#include "error.h"
+#include "lua_fglob.h"
+#include "lua_path.h"
+#include "lua_runtime.h"
+#include "utils.h"
 
 static const char *kRuleMetatableMarker = "Bore.RuleMarker";
 static const char *kBuildGraphRegistryMarker = "__usedAsAddress";
@@ -14,18 +15,17 @@ static const char *kBuildGraphRegistryMarker = "__usedAsAddress";
 extern const char _binary_build_bundle_lua_start[];
 extern const char _binary_build_bundle_lua_end[];
 
-namespace fs = std::filesystem;
-
 static int rule(lua_State *L) {
-    Rule **prule = reinterpret_cast<Rule**>(lua_newuserdata(L, sizeof(Rule*)));
-    *prule = new Rule();
+    struct Rule **prule = (struct Rule**) lua_newuserdata(L, sizeof(struct Rule*));
+    *prule = malloc(sizeof(struct Rule));
 
     luaL_getmetatable(L, kRuleMetatableMarker);
     lua_setmetatable(L, -2);
 
     // Parse out the rules, assuming the lua core has already
     // done some basic data formatting and validation for us
-    Rule &rule = **prule;
+    struct Rule *rule = *prule;
+    rule_init(rule);
 
     int s_top_start = lua_gettop(L);
 
@@ -42,7 +42,7 @@ static int rule(lua_State *L) {
         }
 
         const char* cmd = lua_tostring(L, -1);
-        rule.addCommand(cmd);
+        list_add(&rule->commands, cmd);
         lua_pop(L, 1);
     }
 
@@ -57,7 +57,7 @@ static int rule(lua_State *L) {
         }
 
         const char* output = lua_tostring(L, -1);
-        rule.addOutput(output);
+        list_add(&rule->outputs, output);
         lua_pop(L, 1);
     }
 
@@ -72,7 +72,7 @@ static int rule(lua_State *L) {
         }
 
         const char* input = lua_tostring(L, -1);
-        rule.addInput(input);
+        list_add(&rule->inputs, input);
         lua_pop(L, 1);
     }
 
@@ -87,7 +87,7 @@ static int rule(lua_State *L) {
         }
 
         const char* dir = lua_tostring(L, -1);
-        rule.addDir(dir);
+        list_add(&rule->dirs, dir);
         lua_pop(L, 1);
     }
 
@@ -103,22 +103,25 @@ static int rule(lua_State *L) {
     return 1;
 }
 
-static Rule* rule_check(lua_State *L, int index) {
-    Rule *rule;
+static struct Rule* rule_check(lua_State *L, int index) {
+    struct Rule *rule;
     luaL_checktype(L, index, LUA_TUSERDATA);
 
     void* udata = luaL_testudata(L, index, kRuleMetatableMarker);
     if (udata == NULL)
         return NULL;
 
-    rule = *reinterpret_cast<Rule**>(udata);
+    rule = *((struct Rule**) udata);
     return rule;
 }
 
 static int rule_gc(lua_State *L) {
-    Rule *rule = rule_check(L, -1);
+    struct Rule *rule = rule_check(L, -1);
     luaL_argcheck(L, rule != NULL, 1, "Unexpected non-rule type received");
-    delete rule;
+
+    rule_free(rule);
+    free(rule);
+
     return 0;
 }
 
@@ -140,27 +143,35 @@ static int target(lua_State *L) {
     // Grab the build graph
     lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
     lua_gettable(L, LUA_REGISTRYINDEX);
-    BuildGraph *graph = (BuildGraph*) lua_touserdata(L, -1);
+    struct BuildGraph *graph = (struct BuildGraph*) lua_touserdata(L, -1);
     lua_pop(L, 1);
 
     // Grab the name and the rule
     lua_getfield(L, -1, "name");
     lua_getfield(L, -2, "build");
 
-    Rule *rule = rule_check(L, -1);
+    struct Rule *rule = rule_check(L, -1);
     luaL_argcheck(L, rule != NULL, 1, "Unexpected non-rule type received");
     lua_pop(L, 1);
 
-    std::string name = lua_tostring(L, -1);
+    const char *name = lua_tostring(L, -1);
     lua_pop(L, 1);
 
-    // Create a copy of the rule
-    auto rule_copy = std::make_shared<Rule>(*rule);
-    assert(rule_copy.get() != rule);
+    struct Rule *cpy = malloc(sizeof(struct Rule));
+    rule_init(cpy);
+    rule_copy(cpy, rule);
 
-    // Create a new target with the rule copy
-    auto target = std::make_shared<Target>(name, rule_copy);
-    graph->addTarget(target);
+    struct Target *target = malloc(sizeof(struct Target));
+    target->name = strclone(name);
+    target->rule = cpy;
+
+    struct Error *err = NULL;
+    graph_insert_target(graph, target, &err);
+
+    if (err != NULL) {
+        lua_pushstring(L, err->msg);
+        lua_error(L);
+    }
 
     return 0;
 }
@@ -169,80 +180,56 @@ static int find_target(lua_State *L) {
     // Grab the build graph
     lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
     lua_gettable(L, LUA_REGISTRYINDEX);
-    BuildGraph *graph = (BuildGraph*) lua_touserdata(L, -1);
+    struct BuildGraph *graph = (struct BuildGraph*) lua_touserdata(L, -1);
     lua_pop(L, 1);
 
     const char* name = lua_tostring(L, 1);
-    auto target = graph->findTarget(name);
-
+    struct Target *target = graph_get_target(graph, name);
     if (target == NULL) {
         lua_pushnil(L);
         return 1;
     }
 
-    auto rule = target->getRule();
-    auto ins = rule->getInputs();
-    auto outs = rule->getOutputs();
-    auto cmds = rule->getCommands();
+    struct List *elems[] = {
+        &target->rule->outputs,
+        &target->rule->inputs,
+        &target->rule->commands,
+        &target->rule->dirs,
+        NULL
+    };
 
-    lua_newtable(L); // top level table
+    const char* fields[] = {
+        "outs",
+        "ins",
+        "cmds",
+        "dirs"
+    };
 
-    lua_newtable(L); // outs
-    for (size_t i = 0; i < outs.size(); i++) {
-        lua_pushstring(L, outs[i].c_str());
-        lua_seti(L, -2, i + 1);
-    }
+    lua_newtable(L); // top level table containing the ins, outs, dirs, and cmds
 
-    lua_newtable(L); // ins
-    for (size_t i = 0; i < ins.size(); i++) {
-        lua_pushstring(L, ins[i].c_str());
-        lua_seti(L, -2, i + 1);
-    }
+    int j = 0;
+    while (elems[j] != NULL) {
+        lua_newtable(L); // the lua array for the list
 
-    lua_newtable(L); // cmds
-    for (size_t i = 0; i < cmds.size(); i++) {
-        lua_pushstring(L, cmds[i].c_str());
-        lua_seti(L, -2, i + 1);
-    }
+        int i = 0;
+        struct ListNode *n = list_first(elems[j]);
+        while (n != NULL) {
+            lua_pushstring(L, n->value);
+            lua_seti(L, -2, ++i);
+            n = list_next(n);
+        }
 
-    // reversed order here since we take items
-    // off the tstack
-    lua_setfield(L, -4, "cmds");
-    lua_setfield(L, -3, "ins");
-    lua_setfield(L, -2, "outs");
+        lua_setfield(L, -2, fields[j]);
 
-    return 1;
-}
-
-int glob(lua_State *L) {
-    const char* pattern = lua_tostring(L, 1);
-    std::vector<std::string> matches;
-    if (fglob(pattern, matches)) {
-        std::string err = std::string("Unable to match pathnames from glob: ") + pattern;
-        lua_pushstring(L, err.c_str());
-        lua_error(L);
-        return 0;
-    }
-
-    lua_newtable(L);
-    for (size_t i = 0; i < matches.size(); i++) {
-        lua_pushstring(L, matches[i].c_str());
-        lua_seti(L, -2, i + 1);
+        j++;
     }
 
     return 1;
 }
 
-Runtime::Runtime() {
-    L = luaL_newstate();
-    graph = std::make_unique<BuildGraph>();
-}
+static void runtime_load_libs(struct LuaRuntime *runtime) {
+    lua_State *L = runtime->L;
 
-Runtime::~Runtime() {
-    lua_close(L);
-}
-
-void Runtime::loadLibs() {
     // Load the standard lua libraries
     luaL_openlibs(L);
 
@@ -252,11 +239,14 @@ void Runtime::loadLibs() {
     lua_pushcfunction(L, rule_gc);
     lua_settable(L, -3);
 
-    // Load the path library
+    // Load our c 'libraries'
     luaopen_path(L);
+    luaopen_fglob(L);
 }
 
-void Runtime::loadGlobals() {
+static void runtime_load_globals(struct LuaRuntime *runtime) {
+    lua_State *L = runtime->L;
+
     // the global submodule function
     lua_pushcfunction(L, submodule);
     lua_setglobal(L, "_bore_submodule");
@@ -272,48 +262,58 @@ void Runtime::loadGlobals() {
     // the global find target function
     lua_pushcfunction(L, find_target);
     lua_setglobal(L, "_bore_find_target");
+}
 
-    // the global find target function
-    lua_pushcfunction(L, glob);
-    lua_setglobal(L, "_bore_glob");
+void runtime_init(struct LuaRuntime *runtime) {
+    runtime->L = luaL_newstate();
+    runtime_load_libs(runtime);
+    runtime_load_globals(runtime);
+}
+
+void runtime_free(struct LuaRuntime *runtime) {
+    lua_close(runtime->L);
+}
+
+void runtime_evaluate(struct LuaRuntime *runtime,
+        const char* root_dir,
+        const char* build_dir,
+        const char* build_file,
+        struct BuildGraph *graph,
+        struct Error **err) {
+
+    lua_State *L = runtime->L;
 
     // push the build graph into the regustry
     lua_pushlightuserdata(L, (void *) &kBuildGraphRegistryMarker);
-    lua_pushlightuserdata(L, (void *) graph.get());
+    lua_pushlightuserdata(L, (void *) graph);
     lua_settable(L, LUA_REGISTRYINDEX);
-}
 
-std::unique_ptr<BuildGraph> Runtime::loadAndEvaluate(const std::string &buildpath,
-                                                     const RuntimeConfiguration &conf) {
+    // Load the embedded bore lua core
+    size_t len = _binary_build_bundle_lua_end - _binary_build_bundle_lua_start;
+    char data[len + 1];
 
-    // loadAndEvalueate can only be called once because it taints
-    // the lua runtime
-    assert(graph != nullptr);
+    // Copy it and null terminate it
+    strncpy(data, _binary_build_bundle_lua_start, len);
+    data[len] = '\0';
 
-    loadLibs();
-    loadGlobals();
-
-    size_t bundlelen = _binary_build_bundle_lua_end - _binary_build_bundle_lua_start;
-    std::string data(_binary_build_bundle_lua_start, bundlelen);
-    if(luaL_loadstring (L, data.c_str())) {
-        throw ConfigurationException(lua_tostring(L, -1));
+    if(luaL_loadstring (L, data)) {
+        return error_fmt(err, "%s", lua_tostring(L, -1));
     }
 
     // Add context to the chunk we just loaded and call it
-    lua_pushstring(L, conf.build_dir.c_str());
+    lua_pushstring(L, build_dir);
     lua_setglobal(L, "_bore_build_path");
-    lua_pushstring(L, conf.root_dir.c_str());
+    lua_pushstring(L, root_dir);
     lua_setglobal(L, "_bore_project_path");
     lua_call(L, 0, LUA_MULTRET);
 
     // Finally, load the main build module as a submodule and call it
     lua_getglobal(L, "submodule");
     lua_pushnil(L);
-    lua_pushstring(L, buildpath.c_str());
-    if (lua_pcall(L, 2, LUA_MULTRET, 0)) {
-        throw ConfigurationException(lua_tostring(L, -1));
-    }
+    lua_pushstring(L, build_file);
 
-    return std::move(graph);
+    if (lua_pcall(L, 2, LUA_MULTRET, 0)) {
+        return error_fmt(err, "%s", lua_tostring(L, -1));
+    }
 }
 

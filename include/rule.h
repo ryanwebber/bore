@@ -1,31 +1,18 @@
 #ifndef RULE_H
 #define rule_H
 
-#include <string>
-#include <vector>
+#include "list.h"
 
-class Rule {
-    private:
-        std::vector<std::string> inputs;
-        std::vector<std::string> outputs;
-        std::vector<std::string> commands;
-        std::vector<std::string> dirs;
-
-    public:
-        Rule() = default;
-        Rule(Rule &other) = default;
-        ~Rule() = default;
-
-        void addInput(const std::string &input);
-        void addOutput(const std::string &output);
-        void addCommand(const std::string &command);
-        void addDir(const std::string &dir);
-
-        std::vector<std::string> getOutputs() const;
-        std::vector<std::string> getInputs() const;
-        std::vector<std::string> getCommands() const;
-        std::vector<std::string> getDirs() const;
+struct Rule {
+    struct List inputs;
+    struct List outputs;
+    struct List commands;
+    struct List dirs;
 };
+
+void rule_init(struct Rule *rule);
+void rule_free(struct Rule *rule);
+void rule_copy(struct Rule *dest, struct Rule *src);
 
 #endif
 

@@ -7,7 +7,7 @@ struct MakeOpts {
     const char* makefile;
 };
 
-void make_generate(const BuildGraph &graph, const MakeOpts &opts);
+void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error **err);
 
 #endif
 

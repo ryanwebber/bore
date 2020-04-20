@@ -1,6 +1,6 @@
 
-local cc = "g++-9"
-local cflags = "-g -std=c++17 -Wall"
+local cc = "gcc"
+local cflags = "-g -Wall"
 local include = "-I include"
 local lib = "-llua -lm -ldl"
 
@@ -9,12 +9,13 @@ local build = module.object()
 
 local prefix = "/usr/local"
 
-local obj_files = array.map(module.glob("src/*.cpp"), function (i, source)
+local obj_files = array.map(module.glob("src/*.c"), function (i, source)
+
     local t = target {
         name = source,
         build = rule {
             ins = source,
-            outs = module.object(path.basename(source) .. ".o"),
+            outs = module.object(path.filename(source) .. ".o"),
             cmds = {
                 table.concat({ cc, cflags, include, "-c", "-o", "${outs}", "${ins}" }, " ")
             }
