@@ -4,7 +4,10 @@ tools such as make or ninja.
 
 ## Usage
 ```
-Usage: bore [--option] <generator-type> [--generator-option]
+Usage:
+    bore [--options] --make [--make-makefile]
+    bore [--options] --ninja
+    bore [--options] --graph
 
 Consumes human-writable rule modules written in Lua, and generates corresponding build files for back-end build tools such as Make and Ninja. Bore will evaluate a top level lua file that will define the targets of this project.
 

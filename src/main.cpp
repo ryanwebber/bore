@@ -30,7 +30,10 @@ struct Program {
 
 void usage() {
     std::cerr << std::endl
-              << "Usage: bore [--option] <generator-type> [--generator-option]" << std::endl
+              << "Usage: " << std::endl
+              << "    bore [--options] --make [--make-makefile]" << std::endl
+              << "    bore [--options] --ninja" << std::endl
+              << "    bore [--options] --graph" << std::endl
               << std::endl
               << "Consumes human-writable rule modules written in Lua, and generates corresponding "
               << "build files for back-end build tools such as Make and Ninja. "
