@@ -51,7 +51,7 @@ target {
     name = "bore",
     build = rule {
         ins = { obj_files, targets.luaEmbed.outs },
-        outs = path.join(bin, "bore2"),
+        outs = path.join(bin, "bore"),
         cmds = {
             cc .. " ${ins} -o ${outs} " .. lib
         }
