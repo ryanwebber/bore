@@ -31,7 +31,8 @@ Generator-specific options:
 ## TODO
  * Ninja generation
  * Rules (c, c++, asm, etc)
- * Parameter configuration?
+ * Parameter configuration
+ * Global hiding
  * Documentation
  * Examples
 

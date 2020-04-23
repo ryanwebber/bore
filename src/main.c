@@ -22,6 +22,7 @@ static void usage() {
         "    -h,--help                 show this help message and exit.\n"
         "    -b,--build-dir <DIR>      the out-of-source build folder files (defaults to build/).\n"
         "    -C,--directory <DIR>      the root project directory (defaults to $CWD).\n"
+        "    --dry-run                 attempt to parse the build file, but don't generate anything\n"
         "    -f,--file <FILE>          the root lua build descriptor file (defaults to $CWD/build.lua).\n"
         "    -v --verbose              output verbose logs (defaults to false).\n"
         "\n"
@@ -38,9 +39,11 @@ static void usage() {
 }
 
 enum GeneratorType {
+    t_none,
     t_make,
     t_ninja,
-    t_graph
+    t_graph,
+    t_dry
 };
 
 struct Program {
@@ -58,12 +61,7 @@ static struct Program p = {
     .project_root = "",
     .build_file = NULL,
     .build_dir = "build",
-    .generator_type = t_make,
-    .u = {
-        .make = {
-            .makefile = "Makefile"
-        }
-    }
+    .generator_type = t_none,
 };
 
 static void opt_help(const char* argp[], int argc) {
@@ -84,14 +82,14 @@ static void opt_build_file(const char* argp[], int argc) {
 }
 
 static void opt_make(const char* argp[], int argc) {
-    if (p.generator_type != t_make) {
+    if (p.generator_type != t_make && p.generator_type != t_dry) {
         p.generator_type = t_make;
         p.u.make.makefile = "Makefile";
     }
 }
 
 static void opt_make_makefile(const char* argp[], int argc) {
-    if (p.generator_type != t_make) {
+    if (p.generator_type != t_dry) {
         p.generator_type = t_make;
     }
 
@@ -99,9 +97,12 @@ static void opt_make_makefile(const char* argp[], int argc) {
 }
 
 static void opt_graph(const char* argp[], int argc) {
-    if (p.generator_type != t_graph) {
+    if (p.generator_type != t_dry)
         p.generator_type = t_graph;
-    }
+}
+
+static void opt_dry(const char* argp[], int argc) {
+    p.generator_type = t_dry;
 }
 
 static struct ArgHandler arguments[] = {
@@ -115,6 +116,8 @@ static struct ArgHandler arguments[] = {
 
     { "-C"              , 1, opt_project_root       },
     { "--directory"     , 1, opt_project_root       },
+
+    { "--dry-run"       , 0, opt_dry                },
 
     { "-f"              , 1, opt_build_file         },
     { "--file"          , 1, opt_build_file         },
@@ -139,6 +142,12 @@ int main(int argc, const char* argv[]) {
         fprintf(stderr, "Error: %s\n\n", err->msg);
         usage();
         return 2;
+    }
+
+    if (p.generator_type == t_none) {
+        fprintf(stderr, "Error: The generator type must be specified\n\n");
+        usage();
+        return 12;
     }
 
     if (p.build_file == NULL) {
@@ -168,6 +177,8 @@ int main(int argc, const char* argv[]) {
             break;
         case t_graph:
             graph_generate(&graph);
+            break;
+        case t_dry:
             break;
         default:
             fprintf(stderr, "Generator is currently not supported. Ignoring...\n");
