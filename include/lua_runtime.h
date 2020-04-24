@@ -6,6 +6,7 @@
 #include <lauxlib.h>
 
 #include "build_graph.h"
+#include "keyvalues.h"
 #include "error.h"
 
 
@@ -21,6 +22,7 @@ void runtime_evaluate(
         const char* root_dir,
         const char* build_dir,
         const char* build_file,
+        struct KeyValueList *config,
         struct BuildGraph *graph,
         struct Error **err);
 

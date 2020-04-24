@@ -7,7 +7,7 @@ local lib = "-llua -lm -ldl"
 local bin = module.path("bin")
 local build = module.object()
 
-local prefix = "/usr/local"
+local prefix = type(config.prefix) == "string" and config.prefix or "/usr/local"
 
 local obj_files = array.map(module.glob("src/*.c"), function (i, source)
 

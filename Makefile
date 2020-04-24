@@ -1,7 +1,7 @@
 all: bin/bore
 
-bin/bore: build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/make_generator.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/graph_generator.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o | bin/
-	gcc build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/make_generator.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/graph_generator.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o -o bin/bore -llua -lm -ldl
+bin/bore: build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/make_generator.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/graph_generator.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o | bin/
+	gcc build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/make_generator.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/graph_generator.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o -o bin/bore -llua -lm -ldl
 
 build/__lua_embed.o: build/bundle.lua | build/
 	ld -r -b binary -o build/__lua_embed.o build/bundle.lua
@@ -26,6 +26,9 @@ build/fglob.o: src/fglob.c | build/
 
 build/graph_generator.o: src/graph_generator.c | build/
 	gcc -g -Wall -I include -c -o build/graph_generator.o src/graph_generator.c
+
+build/keyvalues.o: src/keyvalues.c | build/
+	gcc -g -Wall -I include -c -o build/keyvalues.o src/keyvalues.c
 
 build/list.o: src/list.c | build/
 	gcc -g -Wall -I include -c -o build/list.o src/list.c

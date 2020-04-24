@@ -290,6 +290,8 @@ defnrule("rule", {
     end
 })
 
+local config = setmetatable(_bore_config, {})
+
 -- Setup global utilities
 local assert = {
     -- Assertions
@@ -309,6 +311,7 @@ local globals = {
     submodule = submodule,
     target = target,
     targets = targets,
+    config = config,
 }
 
 -- Update the global metatable to resolve the defined rules,

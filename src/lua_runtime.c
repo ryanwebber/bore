@@ -278,6 +278,7 @@ void runtime_evaluate(struct LuaRuntime *runtime,
         const char* root_dir,
         const char* build_dir,
         const char* build_file,
+        struct KeyValueList *config,
         struct BuildGraph *graph,
         struct Error **err) {
 
@@ -300,11 +301,24 @@ void runtime_evaluate(struct LuaRuntime *runtime,
         return error_fmt(err, "%s", lua_tostring(L, -1));
     }
 
-    // Add context to the chunk we just loaded and call it
+    // Add context to the chunk we just loaded
     lua_pushstring(L, build_dir);
     lua_setglobal(L, "_bore_build_path");
     lua_pushstring(L, root_dir);
     lua_setglobal(L, "_bore_project_path");
+
+    // Add config params
+    lua_newtable(L);
+    struct KeyValueNode *kvn = kvp_first(config);
+    while (kvn != NULL) {
+        lua_pushstring(L, kvn->value);
+        lua_setfield(L, -2, kvn->key);
+        kvn = kvp_next(kvn);
+    }
+
+    lua_setglobal(L, "_bore_config");
+
+    // Evaluate the core
     lua_call(L, 0, LUA_MULTRET);
 
     // Finally, load the main build module as a submodule and call it

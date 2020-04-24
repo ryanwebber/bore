@@ -22,6 +22,7 @@ static void usage() {
         "    -h,--help                 show this help message and exit.\n"
         "    -b,--build-dir <DIR>      the out-of-source build folder files (defaults to build/).\n"
         "    -C,--directory <DIR>      the root project directory (defaults to $CWD).\n"
+        "    --config <KEY> <VALUE>    assign a key-value pair to the global lua config table.\n"
         "    --dry-run                 attempt to parse the build file, but don't generate anything\n"
         "    -f,--file <FILE>          the root lua build descriptor file (defaults to $CWD/build.lua).\n"
         "    -v --verbose              output verbose logs (defaults to false).\n"
@@ -50,6 +51,7 @@ struct Program {
     const char* project_root;
     const char* build_file;
     const char* build_dir;
+    struct KeyValueList config;
     enum GeneratorType generator_type;
 
     union {
@@ -61,6 +63,7 @@ static struct Program p = {
     .project_root = "",
     .build_file = NULL,
     .build_dir = "build",
+    .config = { NULL },
     .generator_type = t_none,
 };
 
@@ -79,6 +82,10 @@ static void opt_project_root(const char* argp[], int argc) {
 
 static void opt_build_file(const char* argp[], int argc) {
     p.build_file = argp[1];
+}
+
+static void opt_config(const char* argp[], int argc) {
+    kvp_add(&p.config, argp[1], argp[2]);
 }
 
 static void opt_make(const char* argp[], int argc) {
@@ -116,6 +123,8 @@ static struct ArgHandler arguments[] = {
 
     { "-C"              , 1, opt_project_root       },
     { "--directory"     , 1, opt_project_root       },
+
+    { "--config"        , 2, opt_config             },
 
     { "--dry-run"       , 0, opt_dry                },
 
@@ -163,7 +172,7 @@ int main(int argc, const char* argv[]) {
 
     struct LuaRuntime runtime;
     runtime_init(&runtime);
-    runtime_evaluate(&runtime, p.project_root, p.build_dir, p.build_file, &graph, &err);
+    runtime_evaluate(&runtime, p.project_root, p.build_dir, p.build_file, &p.config, &graph, &err);
     runtime_free(&runtime);
 
     if (err != NULL) {
@@ -191,6 +200,7 @@ int main(int argc, const char* argv[]) {
     }
 
     graph_free(&graph);
+    kvp_free(&p.config);
 
     return 0;
 }
