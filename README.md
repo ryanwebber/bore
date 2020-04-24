@@ -1,3 +1,4 @@
+![CI](https://github.com/ryanwebber/bore/workflows/CI/badge.svg)
 # Bore
 The most boring front-end build tool. Generates build files for back-end build
 tools such as make or ninja.
