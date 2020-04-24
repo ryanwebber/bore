@@ -295,11 +295,11 @@ local config = setmetatable(_bore_config, {})
 -- Setup global utilities
 local assert = {
     -- Assertions
-    is_string = assert_string,
-    is_strings = assert_strings,
-    is_number = assert_number,
-    is_function = assert_function,
-    is_table = assert_table,
+    string = assert_string,
+    strings = assert_strings,
+    number = assert_number,
+    func = assert_function,
+    table = assert_table,
     bubble = doassert
 }
 

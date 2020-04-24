@@ -49,6 +49,7 @@ target {
 
 target {
     name = "bore",
+    default = true,
     build = rule {
         ins = { obj_files, targets.luaEmbed.outs },
         outs = path.join(bin, "bore"),
@@ -67,21 +68,18 @@ target {
 
 target {
     name = "install",
-    build = rule {
-        ins = targets.bore.outs,
-        outs = {},
+    build = phony {
+        deps = { targets.bore },
         cmds = {
-            "install -d " .. path.join(prefix, "bin"),
-            "install -C ${ins} " .. path.join(prefix, "bin")
+            "install -d " .. path.join(prefix, bin),
+            "install -C ${ins} " .. path.join(prefix, bin)
         }
     }
 }
 
 target {
     name = "clean",
-    build = rule {
-        ins = {},
-        outs = {},
+    build = phony {
         cmds = {
             "rm -r " .. bin,
             "rm -r " .. build
@@ -91,9 +89,7 @@ target {
 
 target {
     name = "test",
-    build = rule {
-        ins = {},
-        outs = {},
+    build = phony {
         cmds = {
             string.format("%s -r %s -t /tmp/bore/maketest",
                 module.path("test", "sanity", "maketest"),
