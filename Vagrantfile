@@ -18,10 +18,6 @@ Vagrant.configure("2") do |config|
 
     apt-get install -y build-essential
 
-    add-apt-repository ppa:ubuntu-toolchain-r/test -y
-    apt-get update
-    apt-get install -y gcc-9 g++-9
-
     mkdir -p /tmp/lua
     cd /tmp/lua
     apt-get install -y libreadline-dev
