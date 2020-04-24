@@ -53,7 +53,7 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
 
     struct Target *all = graph_get_target(graph, "all");
     if (all != NULL) {
-        generateRule(m, all->name, &all->rule->inputs, &empty, &empty);
+        generateRule(m, all->name, &all->rule->inputs, &all->rule->dirs, &all->rule->commands);
         fprintf(m, "\n");
     }
 
