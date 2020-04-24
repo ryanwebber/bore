@@ -38,7 +38,7 @@ static int lua_fglob(lua_State *L) {
 
 int luaopen_fglob(lua_State *L) {
     lua_pushcfunction(L, lua_fglob);
-    lua_setglobal(L, "_bore_glob");
+    lua_setglobal(L, "glob");
     return 1;
 }
 

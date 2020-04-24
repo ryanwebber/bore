@@ -1,6 +1,6 @@
 
-local root_build_dir = _bore_build_path
-local root_proj_dir = _bore_project_path
+local root_build_dir = __bore.build_path
+local root_proj_dir = __bore.project_path
 
 -- Fails without a description of where the error occurs
 -- to avoid leaking internal details
@@ -177,14 +177,6 @@ local defnrule = function(name, def)
 
 end
 
-local glob = function(pattern)
-    doassert(function()
-        assert_string(pattern, "Glob pattern should be a string")
-    end)
-
-    return _bore_glob(pattern)
-end
-
 local submodule = function (mod, relpath)
     doassert(function()
         assert_string(relpath, "Submodule path must be a string")
@@ -215,8 +207,18 @@ local submodule = function (mod, relpath)
         end,
     }
 
-    local env = setmetatable({ module = module }, { __index = _G })
-    _bore_submodule(buildfile, env)
+    local env = setmetatable({ module = module }, {
+        __index = function(self, k)
+            if k == "__bore" then
+                -- Hide the internal APIs
+                return nil
+            else
+                return _G[k]
+            end
+        end
+    })
+
+    __bore.submodule(buildfile, env)
 end
 
 local targets = setmetatable({}, {
@@ -225,7 +227,7 @@ local targets = setmetatable({}, {
             assert_string(name, "Target index must be a string")
         end)
 
-        return _bore_find_target(name)
+        return __bore.find_target(name)
     end
 })
 
@@ -240,7 +242,7 @@ local target = function (args)
         end
     end)
 
-    _bore_target(args)
+    __bore.target(args)
     return targets[args.name]
 end
 
@@ -286,11 +288,11 @@ defnrule("rule", {
         -- We varsub only the commands array
         r.cmds = array.map(r.cmds, function(k, v) return k, varsub(v, data) end)
 
-        return _bore_rule(r)
+        return __bore.rule(r)
     end
 })
 
-local config = setmetatable(_bore_config, {})
+local config = setmetatable(__bore.config, {})
 
 -- Setup global utilities
 local assert = {

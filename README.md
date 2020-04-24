@@ -31,7 +31,6 @@ Generator-specific options:
 ## TODO
  * Ninja generation
  * Rules (c, c++, asm, etc)
- * Global hiding
  * Auto regeneration (not via glob, via target?)
  * Auto targets (all, clean)
  * Documentation

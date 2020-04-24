@@ -15,6 +15,12 @@ static const char *kBuildGraphRegistryMarker = "__usedAsAddress";
 extern const char _binary_build_bundle_lua_start[];
 extern const char _binary_build_bundle_lua_end[];
 
+struct RuntimeGlobals {
+    const char *build_dir;
+    const char *root_dir;
+    struct KeyValueList *config;
+};
+
 static int rule(lua_State *L) {
     struct Rule **prule = (struct Rule**) lua_newuserdata(L, sizeof(struct Rule*));
     *prule = malloc(sizeof(struct Rule));
@@ -244,30 +250,39 @@ static void runtime_load_libs(struct LuaRuntime *runtime) {
     luaopen_fglob(L);
 }
 
-static void runtime_load_globals(struct LuaRuntime *runtime) {
-    lua_State *L = runtime->L;
-
-    // the global submodule function
+static void runtime_load_globals(lua_State *L, struct RuntimeGlobals *globals) {
     lua_pushcfunction(L, submodule);
-    lua_setglobal(L, "_bore_submodule");
+    lua_setfield(L, -2, "submodule");
 
-    // the global target function
     lua_pushcfunction(L, target);
-    lua_setglobal(L, "_bore_target");
+    lua_setfield(L, -2, "target");
 
-    // the global rule function
     lua_pushcfunction(L, rule);
-    lua_setglobal(L, "_bore_rule");
+    lua_setfield(L, -2, "rule");
 
-    // the global find target function
     lua_pushcfunction(L, find_target);
-    lua_setglobal(L, "_bore_find_target");
+    lua_setfield(L, -2, "find_target");
+
+    lua_pushstring(L, globals->build_dir);
+    lua_setfield(L, -2, "build_path");
+
+    lua_pushstring(L, globals->root_dir);
+    lua_setfield(L, -2, "project_path");
+
+    lua_newtable(L);
+    struct KeyValueNode *kvn = kvp_first(globals->config);
+    while (kvn != NULL) {
+        lua_pushstring(L, kvn->value);
+        lua_setfield(L, -2, kvn->key);
+        kvn = kvp_next(kvn);
+    }
+
+    lua_setfield(L, -2, "config");
 }
 
 void runtime_init(struct LuaRuntime *runtime) {
     runtime->L = luaL_newstate();
     runtime_load_libs(runtime);
-    runtime_load_globals(runtime);
 }
 
 void runtime_free(struct LuaRuntime *runtime) {
@@ -301,22 +316,22 @@ void runtime_evaluate(struct LuaRuntime *runtime,
         return error_fmt(err, "%s", lua_tostring(L, -1));
     }
 
-    // Add context to the chunk we just loaded
-    lua_pushstring(L, build_dir);
-    lua_setglobal(L, "_bore_build_path");
-    lua_pushstring(L, root_dir);
-    lua_setglobal(L, "_bore_project_path");
+    struct RuntimeGlobals globals = {
+        .build_dir = build_dir,
+        .root_dir = root_dir,
+        .config = config,
+    };
 
-    // Add config params
+    // Load a table that will hold our __bore.* globals
+    // in lua land
     lua_newtable(L);
-    struct KeyValueNode *kvn = kvp_first(config);
-    while (kvn != NULL) {
-        lua_pushstring(L, kvn->value);
-        lua_setfield(L, -2, kvn->key);
-        kvn = kvp_next(kvn);
-    }
+    int stacktop_a = lua_gettop(L);
+    runtime_load_globals(L, &globals);
+    int stacktop_b = lua_gettop(L);
+    assert(stacktop_a == stacktop_b);
 
-    lua_setglobal(L, "_bore_config");
+    // Assign the __bore globals
+    lua_setglobal(L, "__bore");
 
     // Evaluate the core
     lua_call(L, 0, LUA_MULTRET);
