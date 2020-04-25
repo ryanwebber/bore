@@ -84,8 +84,8 @@ target {
     phony = true,
     build = rule {
         cmds = {
-            "rm -r " .. bin,
-            "rm -r " .. build
+            "rm -rf " .. bin,
+            "rm -rf " .. build
         }
     }
 }

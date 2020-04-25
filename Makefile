@@ -75,8 +75,8 @@ commontest: bore
 	cd test/common && lua runner.lua test-*
 
 clean:
-	rm -r bin
-	rm -r build
+	rm -rf bin
+	rm -rf build
 
 install: bore
 	install -d /usr/local/bin
