@@ -29,7 +29,7 @@ target {
     name = "test3",
     build = rule {
         ins = {},
-        outs = { "a/b/c/d.txt" },
+        outs = { "a/b/c/d.txt", "x/y/z.a" },
         cmds = {}
     }
 }
@@ -47,5 +47,6 @@ assert_equals(targets.test1.dirs[1], "dir")
 assert_equals(targets.test2.dirs[1], "a")
 assert_equals(targets.test2.dirs[2], "b")
 assert_equals(targets.test3.dirs[1], "a/b/c/")
+assert_equals(targets.test3.dirs[2], "x/y/")
 assert_equals(targets.test4.dirs[1], nil)
 

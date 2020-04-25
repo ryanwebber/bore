@@ -28,7 +28,7 @@ end)
 target {
     name = "luaBundle",
     build = rule {
-        ins = { module.path("pkg/core.lua"), module.glob("pkg/**/*.lua") },
+        ins = { module.path("pkg/core.lua") },
         outs = module.object("bundle.lua"),
         cmds = {
             "cat ${ins} > ${outs}"

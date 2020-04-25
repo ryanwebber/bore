@@ -6,8 +6,8 @@ bin/bore: build/utils.o build/tstree.o build/target.o build/strset.o build/rule.
 build/__lua_embed.o: build/bundle.lua | build/
 	ld -r -b binary -o build/__lua_embed.o build/bundle.lua
 
-build/bundle.lua: pkg/core.lua pkg/rules/phony.lua | build/
-	cat pkg/core.lua pkg/rules/phony.lua > build/bundle.lua
+build/bundle.lua: pkg/core.lua | build/
+	cat pkg/core.lua > build/bundle.lua
 
 build/argscan.o: src/argscan.c | build/
 	gcc -g -Wall -I include -c -o build/argscan.o src/argscan.c
