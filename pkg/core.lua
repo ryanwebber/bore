@@ -186,22 +186,19 @@ local submodule = function (mod, relpath)
 
     local buildfile = relpath
     local local_dir = root_proj_dir
-    local local_build_dir = root_build_dir
     if mod ~= nil then
         local_dir = path.dirname(buildfile)
-        local_build_dir = path.join(root_build_dir, local_dir)
     end
 
     local module = {
         root_dir = root_proj_dir,
-        root_build_dir = root_build_dir,
+        build_dir = root_build_dir,
         local_dir = local_dir,
-        local_build_dir = local_build_dir,
         path = function(...)
             return path.join(local_dir, ...)
         end,
         object = function(...)
-            return path.join(local_build_dir, ...)
+            return path.join(root_build_dir, ...)
         end,
         glob = function(...)
             return glob(path.join(local_dir, ...))

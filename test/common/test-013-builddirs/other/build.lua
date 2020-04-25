@@ -12,7 +12,7 @@ target {
     name = "test3",
     build = rule {
         ins = {},
-        outs = path.join(module.root_build_dir, "c"),
+        outs = path.join(module.build_dir, "c"),
         cmds = {}
     }
 }

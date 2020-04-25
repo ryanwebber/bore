@@ -16,7 +16,7 @@ target {
     }
 }
 
-assert_equals(targets.test1.outs[1], "/tmp/test-013-builddirs/a")
-assert_equals(targets.test2.outs[1], "/tmp/test-013-builddirs/other/b")
-assert_equals(targets.test3.outs[1], "/tmp/test-013-builddirs/c")
+assert_equals(targets.test1.outs[1], "/tmp/a")
+assert_equals(targets.test2.outs[1], "/tmp/b")
+assert_equals(targets.test3.outs[1], "/tmp/c")
 
