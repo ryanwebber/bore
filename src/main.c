@@ -6,12 +6,17 @@
 #include "make_generator.h"
 #include "path.h"
 
+#define VERSION "0.1.0"
+
 static void usage() {
     const char* u = ""
         "Usage:\n"
         "    bore [--options] --make [--make-makefile]\n"
         "    bore [--options] --ninja\n"
         "    bore [--options] --graph\n"
+        "    bore [--options] --dry-run\n"
+        "    bore -h | --help\n"
+        "    bore --version\n"
         "\n"
         "Consumes human-writable rule modules written in Lua, and generates corresponding "
         "build files for back-end build tools such as Make and Ninja. "
@@ -26,6 +31,7 @@ static void usage() {
         "    --dry-run                 attempt to parse the build file, but don't generate anything\n"
         "    -f,--file <FILE>          the root lua build descriptor file (defaults to $CWD/build.lua).\n"
         "    -v --verbose              output verbose logs (defaults to false).\n"
+        "    --version                 print the version and exit\n"
         "\n"
         "Supported generators:\n"
         "    --make                    Makefiles for use with make.\n"
@@ -88,6 +94,11 @@ static void opt_config(const char* argp[], int argc) {
     kvp_add(&p.config, argp[1], argp[2]);
 }
 
+static void opt_version(const char* argp[], int argc) {
+    fprintf(stderr, "bore v" VERSION "\n");
+    exit(1);
+}
+
 static void opt_make(const char* argp[], int argc) {
     if (p.generator_type != t_make && p.generator_type != t_dry) {
         p.generator_type = t_make;
@@ -130,6 +141,8 @@ static struct ArgHandler arguments[] = {
 
     { "-f"              , 1, opt_build_file         },
     { "--file"          , 1, opt_build_file         },
+
+    { "--version"       , 0, opt_version            },
 
     // Make options
     { "--make"          , 0, opt_make               },
