@@ -8,7 +8,7 @@ end
 
 assert_error(function()
     rule {
-        outs = {},
+        outs = 3,
         cmds = {}
     }
 end)
@@ -16,15 +16,12 @@ end)
 assert_error(function()
     rule {
         ins = {},
-        cmds = {}
+        cmds = false
     }
 end)
 
 assert_error(function()
-    rule {
-        outs = {},
-        ins = {}
-    }
+    rule ""
 end)
 
 assert_error(function()

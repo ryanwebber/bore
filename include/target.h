@@ -5,6 +5,7 @@
 
 struct Target {
     char *name;
+    bool phony;
     struct Rule *rule;
 };
 

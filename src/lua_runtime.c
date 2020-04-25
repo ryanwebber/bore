@@ -35,6 +35,7 @@ static int rule(lua_State *L) {
 
     int s_top_start = lua_gettop(L);
 
+    lua_getfield(L, 1, "deps");
     lua_getfield(L, 1, "dirs");
     lua_getfield(L, 1, "ins");
     lua_getfield(L, 1, "outs");
@@ -97,7 +98,22 @@ static int rule(lua_State *L) {
         lua_pop(L, 1);
     }
 
-    // Remember to do this one last time
+    // Pop back to deps
+    lua_pop(L, 1);
+
+    // Adding the deps
+    lua_pushnil(L);  /* first key */
+    while (lua_next(L, -2) != 0) {
+        if (!lua_isinteger(L, -2) || !lua_isstring(L, -1)) {
+            luaL_argerror(L, 1, "Expected deps to be a list of strings");
+        }
+
+        const char* dep = lua_tostring(L, -1);
+        list_add(&rule->deps, dep);
+        lua_pop(L, 1);
+    }
+
+    // Pop one last time
     lua_pop(L, 1);
 
     // General sanity check. The stack gets emptied when we
@@ -154,10 +170,14 @@ static int target(lua_State *L) {
 
     // Grab the name and the rule
     lua_getfield(L, -1, "name");
-    lua_getfield(L, -2, "build");
+    lua_getfield(L, -2, "phony");
+    lua_getfield(L, -3, "build");
 
     struct Rule *rule = rule_check(L, -1);
     luaL_argcheck(L, rule != NULL, 1, "Unexpected non-rule type received");
+    lua_pop(L, 1);
+
+    bool phony = lua_toboolean(L, -1);
     lua_pop(L, 1);
 
     const char *name = lua_tostring(L, -1);
@@ -170,6 +190,7 @@ static int target(lua_State *L) {
     struct Target *target = malloc(sizeof(struct Target));
     target->name = strclone(name);
     target->rule = cpy;
+    target->phony = phony;
 
     struct Error *err = NULL;
     graph_insert_target(graph, target, &err);
@@ -229,6 +250,9 @@ static int find_target(lua_State *L) {
 
         j++;
     }
+
+    lua_pushstring(L, target->name);
+    lua_setfield(L, -2, "name");
 
     return 1;
 }

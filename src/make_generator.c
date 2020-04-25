@@ -12,12 +12,17 @@ void generateRule(
         FILE *m,
         const char *name,
         struct List *inputs,
+        struct List *deps,
         struct List *dirs,
         struct List *commands) {
 
     fprintf(m, "%s:", name);
 
     for (struct ListNode *node = list_first(inputs); node != NULL; node = list_next(node)) {
+        fprintf(m, " %s", node->value);
+    }
+
+    for (struct ListNode *node = list_first(deps); node != NULL; node = list_next(node)) {
         fprintf(m, " %s", node->value);
     }
 
@@ -51,22 +56,43 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
     struct List empty;
     list_init(&empty);
 
+    struct TSTree vtargets;
+    tstree_init(&vtargets);
+
+    struct TargetList *tlist = graph->list;
+    while (tlist != NULL) {
+        struct ListNode *dep = list_first(&tlist->target->rule->deps);
+        while (dep != NULL) {
+            tstree_insert(&vtargets, dep->value, NULL);
+            dep = list_next(dep);
+        }
+
+        tlist = tlist->next;
+    }
+
     struct Target *all = graph_get_target(graph, "all");
-    if (all != NULL) {
-        generateRule(m, all->name, &all->rule->inputs, &all->rule->dirs, &all->rule->commands);
+    if (all != NULL && all->phony) {
+        struct List* tins = &all->rule->inputs;
+        struct List* tdirs = &all->rule->dirs;
+        struct List* tcmds = &all->rule->commands;
+        struct List* tdeps = &all->rule->deps;
+        generateRule(m, all->name, tins, tdeps, tdirs, tcmds);
         fprintf(m, "\n");
+    } else {
+        all = NULL;
     }
 
     // First pass, create rules and collect dir listings
-    struct TargetList *tlist = graph->list;
+    tlist = graph->list;
     while (tlist != NULL) {
         struct List* tdirs = &tlist->target->rule->dirs;
         struct List* tins = &tlist->target->rule->inputs;
+        struct List* tdeps = &tlist->target->rule->deps;
         struct List* tcmds = &tlist->target->rule->commands;
 
         struct ListNode *tout = list_first(&tlist->target->rule->outputs);
         while (tout != NULL) {
-            generateRule(m, tout->value, tins, tdirs, tcmds);
+            generateRule(m, tout->value, tins, tdeps, tdirs, tcmds);
             fprintf(m, "\n");
 
             tout = list_next(tout);
@@ -91,8 +117,8 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
     // Second pass, try to make phony targets
     tlist = graph->list;
     while (tlist != NULL) {
-        if (list_empty(&tlist->target->rule->outputs)) {
-            const char *name = tlist->target->name;
+        const char *name = tlist->target->name;
+        if (tlist->target->phony) {
 
             if (sset_has(&dirs, name)) {
                 return error_fmt(err, "Directory '%s' collides with a phony build rule", name);
@@ -102,10 +128,14 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
 
             if (all == NULL || strcmp(all->name, name) != 0) {
                 struct List* tins = &tlist->target->rule->inputs;
+                struct List* tdeps = &tlist->target->rule->deps;
                 struct List* tcmds = &tlist->target->rule->commands;
-                generateRule(m, name, tins, &empty, tcmds);
+                generateRule(m, name, tins, tdeps, &empty, tcmds);
                 fprintf(m, "\n");
             }
+        } else if (tstree_test(&vtargets, tlist->target->name)) {
+            generateRule(m, name, &tlist->target->rule->outputs, &empty, &empty, &empty);
+            fprintf(m, "\n");
         }
 
         tlist = tlist->next;
@@ -120,7 +150,7 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
 
     if (!list_empty(phonies.values)) {
         fprintf(m, ".PHONY:");
-        
+
         struct ListNode *phony = list_first(phonies.values);
         while(phony != NULL) {
             fprintf(m, " %s", phony->value);

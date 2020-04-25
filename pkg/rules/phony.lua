@@ -21,6 +21,8 @@ defnrule("phony", {
             cmds = assert.bubble(function()
                 return assert.strings(args.cmds, "Expected phony cmds to be strings")
             end)
+        elseif type(args.cmds) == "string" then
+            cmds = { args.cmds }
         end
 
         return {

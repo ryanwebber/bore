@@ -8,6 +8,7 @@ struct Rule {
     struct List outputs;
     struct List commands;
     struct List dirs;
+    struct List deps;
 };
 
 void rule_init(struct Rule *rule);

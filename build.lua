@@ -61,14 +61,16 @@ target {
 
 target {
     name = "all",
-    build = phony {
-        deps = { targets.bore }
+    phony = true,
+    build = rule {
+        deps = targets.bore
     }
 }
 
 target {
     name = "install",
-    build = phony {
+    phony = true,
+    build = rule {
         deps = { targets.bore },
         cmds = {
             "install -d " .. path.join(prefix, bin),
@@ -79,7 +81,8 @@ target {
 
 target {
     name = "clean",
-    build = phony {
+    phony = true,
+    build = rule {
         cmds = {
             "rm -r " .. bin,
             "rm -r " .. build
@@ -87,15 +90,32 @@ target {
     }
 }
 
+-- Tests
+
+target {
+    name = "commontest",
+    phony = true,
+    build = rule {
+        deps = targets.bore,
+        cmds = "cd test/common && lua runner.lua test-*"
+    }
+}
+
+target {
+    name = "sanitytest",
+    phony = true,
+    build = rule {
+        cmds = {
+            module.path("test", "sanity", "maketest") .. " -r " .. module.path(".") .. " -t /tmp/bore/maketest",
+        }
+    }
+}
+
 target {
     name = "test",
-    build = phony {
-        cmds = {
-            --string.format("%s -r %s -t /tmp/bore/maketest",
-            --    module.path("test", "sanity",
-            --    "maketest"), module.path(".")),
-            "cd test/common && lua runner.lua test-*"
-        }
+    phony = true,
+    build = rule {
+        deps = { targets.commontest, targets.sanitytest }
     }
 }
 
