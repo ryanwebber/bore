@@ -362,10 +362,9 @@ void runtime_evaluate(struct LuaRuntime *runtime,
 
     // Finally, load the main build module as a submodule and call it
     lua_getglobal(L, "submodule");
-    lua_pushnil(L);
     lua_pushstring(L, build_file);
 
-    if (lua_pcall(L, 2, LUA_MULTRET, 0)) {
+    if (lua_pcall(L, 1, LUA_MULTRET, 0)) {
         return error_fmt(err, "%s", lua_tostring(L, -1));
     }
 }

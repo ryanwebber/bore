@@ -26,10 +26,10 @@ static void usage() {
         "Optional arguments:\n"
         "    -h,--help                 show this help message and exit.\n"
         "    -b,--build-dir <DIR>      the out-of-source build folder files (defaults to build/).\n"
-        "    -C,--directory <DIR>      the root project directory (defaults to $CWD).\n"
+        "    -C,--directory <DIR>      the root project directory (defaults to the current directory).\n"
         "    --config <KEY> <VALUE>    assign a key-value pair to the global lua config table.\n"
         "    --dry-run                 attempt to parse the build file, but don't generate anything\n"
-        "    -f,--file <FILE>          the root lua build descriptor file (defaults to $CWD/build.lua).\n"
+        "    -f,--file <FILE>          the root lua build descriptor file (defaults to build.lua).\n"
         "    -v --verbose              output verbose logs (defaults to false).\n"
         "    --version                 print the version and exit\n"
         "\n"
@@ -67,7 +67,7 @@ struct Program {
 
 static struct Program p = {
     .project_root = "",
-    .build_file = NULL,
+    .build_file = "build.lua",
     .build_dir = "build",
     .config = { NULL },
     .generator_type = t_none,
@@ -170,14 +170,6 @@ int main(int argc, const char* argv[]) {
         fprintf(stderr, "Error: The generator type must be specified\n\n");
         usage();
         return 12;
-    }
-
-    if (p.build_file == NULL) {
-        // Create the buffer with some arbitrary padding for the path separator
-        size_t len = strlen(p.project_root) + 32;
-        char buf[len];
-        path_join(p.project_root, "build.lua", buf, len);
-        p.build_file = strndup(buf, len);
     }
 
     struct BuildGraph graph;

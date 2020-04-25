@@ -179,16 +179,13 @@ local defnrule = function(name, def)
 
 end
 
-local submodule = function (mod, relpath)
+local submodule = function (relative_path)
     doassert(function()
-        assert_string(relpath, "Submodule path must be a string")
+        assert_string(relative_path, "Submodule path should be a string")
     end)
 
-    local buildfile = relpath
-    local local_dir = root_proj_dir
-    if mod ~= nil then
-        local_dir = path.dirname(buildfile)
-    end
+    local build_file = path.join(root_proj_dir, relative_path)
+    local local_dir = path.dirname(build_file)
 
     local module = {
         root_dir = root_proj_dir,
@@ -216,7 +213,7 @@ local submodule = function (mod, relpath)
         end
     })
 
-    __bore.submodule(buildfile, env)
+    __bore.submodule(build_file, env)
 end
 
 local targets = setmetatable({}, {

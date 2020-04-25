@@ -5,7 +5,7 @@ function assert_equals(a, b)
     end
 end
 
-submodule(module, module.path("other", "build.lua"))
+submodule("other/build.lua")
 
 target {
     name = "all",
