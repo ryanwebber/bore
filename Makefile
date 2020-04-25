@@ -67,7 +67,7 @@ build/utils.o: src/utils.c | build/
 	gcc -g -Wall -I include -c -o build/utils.o src/utils.c
 
 test:
-	test/sanity/maketest -r . -t /tmp/bore/maketest
+	cd test/common && lua runner.lua test-*
 
 clean:
 	rm -r bin

@@ -91,9 +91,10 @@ target {
     name = "test",
     build = phony {
         cmds = {
-            string.format("%s -r %s -t /tmp/bore/maketest",
-                module.path("test", "sanity", "maketest"),
-                module.path("."))
+            --string.format("%s -r %s -t /tmp/bore/maketest",
+            --    module.path("test", "sanity",
+            --    "maketest"), module.path(".")),
+            "cd test/common && lua runner.lua test-*"
         }
     }
 }

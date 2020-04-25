@@ -184,12 +184,11 @@ local submodule = function (mod, relpath)
 
     local buildfile = relpath
     local local_dir = root_proj_dir
+    local local_build_dir = root_build_dir
     if mod ~= nil then
-        buildfile = path.join(mod.local_dir, relpath)
         local_dir = path.dirname(buildfile)
+        local_build_dir = path.join(root_build_dir, local_dir)
     end
-
-    local local_build_dir = path.join(root_build_dir, local_dir)
 
     local module = {
         root_dir = root_proj_dir,
@@ -248,30 +247,38 @@ end
 
 defnrule("rule", {
     validator = function(args)
+
+        local ins = assert_strings(args.ins, "Rule inputs should be a string array")
+        local outs = assert_strings(args.outs, "Rule outputs should be a string array")
+        local cmds = assert_strings(args.cmds, "Rule commands should be a string array")
+        local dirs = args.dirs
+
+        if type(dirs) == "string" then
+            dirs = { dirs }
+        elseif type(dirs) ~= "table" then
+            dirs = {}
+            for _, out in pairs(outs) do
+                local dir = path.dirname(out)
+                if type(dir) == "string" and #dir > 0 then
+                    table.insert(dirs, dir)
+                end
+            end
+        end
+
         return {
-            ins = assert_strings(args.ins, "Rule inputs should be a string array"),
-            outs = assert_strings(args.outs, "Rule outputs should be a string array"),
-            cmds = assert_strings(args.cmds, "Rule commands should be a string array"),
+            ins = ins,
+            outs = outs,
+            cmds = cmds,
+            dirs = dirs
         }
     end,
     generator = function(args)
-
-        local dirs = args.dirs
-        if type(dirs) ~= "table" then
-            local dirset = array.map(args.outs, function(_, p)
-                return path.dirname(p), 1
-            end)
-
-            dirs = array.map(dirset, function(k, _, i)
-                return i, k
-            end)
-        end
 
         local r = {
             cmds = args.cmds,
             ins = args.ins,
             outs = args.outs,
-            dirs = dirs
+            dirs = args.dirs
         }
 
         local data = setmetatable(r, {

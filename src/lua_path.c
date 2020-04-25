@@ -66,7 +66,7 @@ static int lua_path_extension(lua_State *L) {
 
     const char* p = lua_tostring(L, 1);
     const char* ext;
-    size_t len = path_filename(p, &ext);
+    size_t len = path_extension(p, &ext);
 
     lua_pushlstring(L, ext, len);
     return 1;
