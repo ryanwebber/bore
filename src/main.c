@@ -30,7 +30,7 @@ static void usage() {
         "    -C,--directory <DIR>      the root project directory (defaults to the current directory).\n"
         "    --config <KEY> <VALUE>    assign a key-value pair to the global lua config table.\n"
         "    --dry-run                 attempt to parse the build file, but don't generate anything\n"
-        "    -f,--file <FILE>          the root lua build descriptor file (defaults to build.lua).\n"
+        "    -f,--file <FILE>          the root lua build descriptor file (defaults to bore.lua).\n"
         "    -v --verbose              output verbose logs (defaults to false).\n"
         "    --version                 print the version and exit\n"
         "\n"
@@ -70,7 +70,7 @@ struct Program {
 
 static struct Program p = {
     .project_root = "",
-    .build_file = "build.lua",
+    .build_file = "bore.lua",
     .build_dir = "build",
     .config = { NULL },
     .generator_type = t_none,

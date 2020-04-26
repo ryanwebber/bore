@@ -16,7 +16,7 @@ RUN cd /tmp/lua && \
 
 COPY . /bore
 
-RUN make -C /bore clean
-RUN make -C /bore all
-RUN make -C /bore test
+RUN ninja -C /bore clean
+RUN ninja -C /bore
+RUN ninja -C /bore test
 

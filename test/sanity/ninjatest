@@ -55,14 +55,14 @@ mkdir -p "$DIR"
 mkdir "$DIR/out"
 
 echo "$PRIMER [2/$STEPS]: Copying source files..."
-cp -r "$REPO/src" "$REPO/pkg" "$REPO/include" "$REPO/Makefile" "$REPO/build.lua" "$DIR"
+cp -r "$REPO/src" "$REPO/pkg" "$REPO/include" "$REPO/build.ninja" "$REPO/bore.lua" "$DIR"
 
 echo "$PRIMER [3/$STEPS]: Building first binary..."
-make -C "$DIR"
+ninja -C "$DIR"
 
 echo "$PRIMER [4/$STEPS]: Generating first build file..."
 sh -c "cd $DIR && ./bin/bore --ninja-file $DIR/out/ninja_gen.build"
-make -C "$DIR" clean
+ninja -C "$DIR" clean
 
 echo "$PRIMER [5/$STEPS]: Building second binary..."
 ninja -f "$DIR/out/ninja_gen.build" -C "$DIR"

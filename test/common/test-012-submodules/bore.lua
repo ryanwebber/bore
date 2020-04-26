@@ -5,7 +5,7 @@ function assert_equals(a, b)
     end
 end
 
-submodule("other/build.lua")
+submodule("other/bore.lua")
 
 target {
     name = "all",
