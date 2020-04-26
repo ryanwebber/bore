@@ -42,3 +42,13 @@ assert_error(function()
     }
 end)
 
+assert_error(function()
+    target {
+        name = "phony",
+        phony = true,
+        build = rule {
+            outs = "a"
+        }
+    }
+end)
+

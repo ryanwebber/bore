@@ -7,6 +7,7 @@ struct Target {
     char *name;
     bool phony;
     bool primary;
+    bool alias;
     struct Rule *rule;
 };
 

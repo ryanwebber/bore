@@ -8,21 +8,16 @@
 
 #define TAB "\t"
 
-void generateRule(
+void emit_make_rule(
         FILE *m,
-        const char *name,
+        const char *output,
         struct List *inputs,
-        struct List *deps,
         struct List *dirs,
         struct List *commands) {
 
-    fprintf(m, "%s:", name);
+    fprintf(m, "%s:", output);
 
     for (struct ListNode *node = list_first(inputs); node != NULL; node = list_next(node)) {
-        fprintf(m, " %s", node->value);
-    }
-
-    for (struct ListNode *node = list_first(deps); node != NULL; node = list_next(node)) {
         fprintf(m, " %s", node->value);
     }
 
@@ -38,6 +33,8 @@ void generateRule(
     for (struct ListNode *node = list_first(commands); node != NULL; node = list_next(node)) {
         fprintf(m, "%s%s\n", TAB, node->value);
     }
+
+    fprintf(m, "\n");
 }
 
 void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error **err) {
@@ -47,14 +44,11 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
         return error_fmt(err, "Unable to open %s", opts->makefile);
     }
 
-    struct TSTree vtargets;
-    tstree_init(&vtargets);
-
     struct StringSet defaults;
     sset_init(&defaults);
 
-    struct StringSet phonies;
-    sset_init(&phonies);
+    struct StringSet phonys;
+    sset_init(&phonys);
 
     struct StringSet dirs;
     sset_init(&dirs);
@@ -62,103 +56,116 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
     struct List empty;
     list_init(&empty);
 
+    // First: collect phonys, dirs, and default targets
     struct TargetList *tlist = graph->list;
     while (tlist != NULL) {
-        struct ListNode *dep = list_first(&tlist->target->rule->deps);
-        while (dep != NULL) {
-            tstree_insert(&vtargets, dep->value, NULL);
-            dep = list_next(dep);
-        }
+        const char *name = tlist->target->name;
 
+        // Make a note of the target if it's maked as default
         if (tlist->target->primary) {
-            if (tlist->target->phony) {
-                sset_insert(&defaults, tlist->target->name);
-            } else {
-                struct ListNode *tout = list_first(&tlist->target->rule->outputs);
-                while (tout != NULL) {
-                    sset_insert(&defaults, tout->value);
-                    tout = list_next(tout);
-                }
-            }
+            sset_insert(&defaults, name);
+        }
+
+        // Create a phony target if it is listed as phony, of if the target name
+        // is not already an output in the project
+        if (tlist->target->phony ||
+                (graph_dep_search(graph, name) == NULL && tlist->target->alias)) {
+
+            sset_insert(&phonys, name);
+        }
+
+        // Keep track of all the dirs we will ever need
+        struct ListNode *dir = list_first(&tlist->target->rule->dirs);
+        while (dir != NULL) {
+            sset_insert(&dirs, dir->value);
+            dir = list_next(dir);
         }
 
         tlist = tlist->next;
     }
 
+    // Second: Check phonys for collisions with dirs and outputs
+    struct ListNode *phony = list_first(phonys.values);
+    while (phony != NULL) {
+        const char *name = phony->value;
+
+        if (sset_has(&dirs, name)) {
+            return error_fmt(err, "Directory '%s' collides with phony target '%s'",
+                    name, name);
+        }
+
+        struct Target *tcoll = graph_dep_search(graph, name);
+        if (tcoll != NULL) {
+            return error_fmt(err, "Target '%s' output collides with phony target '%s'",
+                    tcoll->name, name);
+        }
+
+        phony = list_next(phony);
+    }
+
+    // Third: Check dirs for collisions against outputs
+    struct ListNode *dir = list_first(dirs.values);
+    while (dir != NULL) {
+        const char *name = dir->value;
+
+        struct Target *tcoll = graph_dep_search(graph, name);
+        if (tcoll != NULL) {
+            return error_fmt(err, "Target '%s' output collides with directory '%s'",
+                    tcoll->name, name);
+        }
+
+        dir = list_next(dir);
+    }
+
+    // Fourth: Emit the all target if needed
     if (!list_empty(defaults.values)) {
-        generateRule(m, "all", defaults.values, &empty, &empty, &empty);
+        emit_make_rule(m, "all", defaults.values, &empty, &empty);
         fprintf(m, "\n");
-        sset_insert(&phonies, "all");
+        sset_insert(&phonys, "all");
     }
 
-    // First pass, create rules and collect dir listings
-    tlist = graph->list;
-    while (tlist != NULL) {
-        struct List* tdirs = &tlist->target->rule->dirs;
-        struct List* tins = &tlist->target->rule->inputs;
-        struct List* tdeps = &tlist->target->rule->deps;
-        struct List* tcmds = &tlist->target->rule->commands;
-
-        struct ListNode *tout = list_first(&tlist->target->rule->outputs);
-        while (tout != NULL) {
-            generateRule(m, tout->value, tins, tdeps, tdirs, tcmds);
-            fprintf(m, "\n");
-
-            tout = list_next(tout);
-        }
-
-        struct ListNode *tdir = list_first(tdirs);
-        while (tdir != NULL) {
-            struct Target *collision = graph_dep_search(graph, tdir->value);
-            if (collision != NULL) {
-                return error_fmt(err, 
-                        "Directory '%s' created in target '%s' collides with build rule in target'%s'",
-                        tdir->value, tlist->target->name, collision->name);
-            }
-
-            sset_insert(&dirs, tdir->value);
-            tdir = list_next(tdir);
-        }
-
-        tlist = tlist->next;
-    }
-
-    // Second pass, try to make phony targets
+    // Fifth: Emit the normal targets
     tlist = graph->list;
     while (tlist != NULL) {
         const char *name = tlist->target->name;
-        if (tlist->target->phony) {
+        struct List* tdirs = &tlist->target->rule->dirs;
+        struct List* tins = &tlist->target->rule->inputs;
+        struct List* touts = &tlist->target->rule->outputs;
+        struct List* tcmds = &tlist->target->rule->commands;
 
-            if (sset_has(&dirs, name)) {
-                return error_fmt(err, "Directory '%s' collides with a phony build rule", name);
+        // If we're expecting to create a phony target, create it now
+        if (sset_has(&phonys, name)) {
+            if (tlist->target->phony) {
+                // If we're a true phony, include commands we might have
+                emit_make_rule(m, name, tins, &empty, tcmds);
+            } else {
+                // If it's not a true phony, it's an alias so ignore the commands
+                emit_make_rule(m, name, touts, &empty, &empty);
             }
+        }
 
-            sset_insert(&phonies, name);
-
-            struct List* tins = &tlist->target->rule->inputs;
-            struct List* tdeps = &tlist->target->rule->deps;
-            struct List* tcmds = &tlist->target->rule->commands;
-            generateRule(m, name, tins, tdeps, &empty, tcmds);
-            fprintf(m, "\n");
-        } else if (tstree_test(&vtargets, tlist->target->name)) {
-            generateRule(m, name, &tlist->target->rule->outputs, &empty, &empty, &empty);
-            fprintf(m, "\n");
+        struct ListNode *out = list_first(touts);
+        while (out != NULL) {
+            emit_make_rule(m, out->value, tins, tdirs, tcmds);
+            out = list_next(out);
         }
 
         tlist = tlist->next;
     }
 
-    struct ListNode *dir = list_first(dirs.values);
+    // Sixth: Emit the directory targets
+    dir = list_first(dirs.values);
     while (dir != NULL) {
         fprintf(m, "%s:\n", dir->value);
         fprintf(m, "%s@mkdir -p $@\n\n", TAB);
         dir = list_next(dir);
     }
 
-    if (!list_empty(phonies.values)) {
+    // Seventh: Emit the .PHONY target
+    if (!list_empty(phonys.values)) {
         fprintf(m, ".PHONY:");
 
-        struct ListNode *phony = list_first(phonies.values);
+        struct ListNode *phony = list_first(phonys.values);
         while(phony != NULL) {
             fprintf(m, " %s", phony->value);
             phony = list_next(phony);
@@ -167,9 +174,9 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
         fprintf(m, "\n\n");
     }
 
-    sset_free(&phonies);
+    sset_free(&defaults);
+    sset_free(&phonys);
     sset_free(&dirs);
     list_free(&empty);
-    tstree_free(&vtargets);
 }
 

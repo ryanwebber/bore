@@ -242,7 +242,14 @@ local target = function (args)
         build = args.build,
         phony = args.phony == true,
         default = args.default == true,
+        alias = args.alias ~= false,
     })
+
+    doassert(function()
+        if args.phony == true and #targets[args.name].outs > 0 then
+            fatal("Targets marked as phony should provide no outputs")
+        end
+    end)
 
     return targets[args.name]
 end
@@ -267,28 +274,10 @@ defnrule("rule", {
             end
         end
 
-        local deps = {}
-        if type(args.deps) == "table" then
-            if type(args.deps.name) == "string" then
-                deps = { args.deps.name }
-            else
-                for _, t in pairs(args.deps) do
-                    if type(t) == "string" then
-                        table.insert(deps, t)
-                    elseif type(t) == "table" and type(t.name) == "string" then
-                        table.insert(deps, t.name)
-                    end
-                end
-            end
-        elseif type(args.deps) == "string" then
-            deps = { args.deps }
-        end
-
         return {
             ins = ins,
             outs = outs,
             cmds = cmds,
-            deps = deps,
             dirs = dirs
         }
     end,
@@ -314,9 +303,6 @@ defnrule("rule", {
 
         -- We varsub only the commands array
         r.cmds = array.map(r.cmds, function(k, v) return k, varsub(v, data) end)
-
-        -- Add back the deps now
-        r.deps = args.deps
 
         return __bore.rule(r)
     end

@@ -1,4 +1,23 @@
-all: bin/bore
+all: bore
+
+
+test: commontest sanitytest
+
+sanitytest:
+	test/sanity/maketest -r . -t /tmp/bore/maketest
+
+commontest: bore
+	cd test/common && lua runner.lua test-*
+
+clean:
+	rm -rf bin
+	rm -rf build
+
+install: bore
+	install -d /usr/local/bin
+	install -C bore /usr/local/bin
+
+bore: bin/bore
 
 bin/bore: build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/gen_ninja.o build/gen_make.o build/gen_dot.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o | bin/
 	gcc build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/gen_ninja.o build/gen_make.o build/gen_dot.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o -o bin/bore -llua -lm -ldl
@@ -69,29 +88,11 @@ build/tstree.o: src/tstree.c | build/
 build/utils.o: src/utils.c | build/
 	gcc -g -Wall -I include -c -o build/utils.o src/utils.c
 
-test: commontest sanitytest
-
-sanitytest:
-	test/sanity/maketest -r . -t /tmp/bore/maketest
-
-commontest: bore
-	cd test/common && lua runner.lua test-*
-
-clean:
-	rm -rf bin
-	rm -rf build
-
-install: bore
-	install -d /usr/local/bin
-	install -C  /usr/local/bin
-
-bore: bin/bore
-
 build/:
 	@mkdir -p $@
 
 bin/:
 	@mkdir -p $@
 
-.PHONY: install clean commontest sanitytest test all
+.PHONY: all bore install clean commontest sanitytest test
 
