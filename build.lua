@@ -106,7 +106,7 @@ target {
     phony = true,
     build = rule {
         cmds = {
-            module.path("test", "sanity", "maketest") .. " -r " .. module.path(".") .. " -t /tmp/bore/maketest",
+            "test/sanity/maketest -r " .. module.path(".") .. " -t /tmp/bore/maketest",
         }
     }
 }

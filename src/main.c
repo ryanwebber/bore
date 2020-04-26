@@ -1,9 +1,10 @@
 #include <string.h>
 
 #include "argscan.h"
-#include "graph_generator.h"
+#include "gen_dot.h"
+#include "gen_make.h"
+#include "gen_ninja.h"
 #include "lua_runtime.h"
-#include "make_generator.h"
 #include "path.h"
 
 #define VERSION "0.1.0"
@@ -11,8 +12,8 @@
 static void usage() {
     const char* u = ""
         "Usage:\n"
-        "    bore [--options] --make [--make-makefile]\n"
-        "    bore [--options] --ninja\n"
+        "    bore [--options] --make [--make-file]\n"
+        "    bore [--options] --ninja [--ninja-file]\n"
         "    bore [--options] --graph\n"
         "    bore [--options] --dry-run\n"
         "    bore -h | --help\n"
@@ -39,7 +40,8 @@ static void usage() {
         "    --graph                   dependency graphs using DOT notation.\n"
         "\n"
         "Generator-specific options:\n"
-        "    --make-makefile <FILE>    the path of the Makefile to generate.\n"
+        "    --make-file <FILE>        the path of the Makefile to generate.\n"
+        "    --ninja-file <FILE>       the path of the Ninja build file to generate.\n"
         ;
 
     fprintf(stderr, "%s\n", u);
@@ -62,6 +64,7 @@ struct Program {
 
     union {
         struct MakeOpts make;
+        struct NinjaOpts ninja;
     } u;
 };
 
@@ -106,12 +109,27 @@ static void opt_make(const char* argp[], int argc) {
     }
 }
 
-static void opt_make_makefile(const char* argp[], int argc) {
+static void opt_make_file(const char* argp[], int argc) {
     if (p.generator_type != t_dry) {
         p.generator_type = t_make;
     }
 
     p.u.make.makefile = argp[1];
+}
+
+static void opt_ninja(const char* argp[], int argc) {
+    if (p.generator_type != t_ninja && p.generator_type != t_dry) {
+        p.generator_type = t_ninja;
+        p.u.make.makefile = "build.ninja";
+    }
+}
+
+static void opt_ninja_file(const char* argp[], int argc) {
+    if (p.generator_type != t_dry) {
+        p.generator_type = t_ninja;
+    }
+
+    p.u.ninja.ninja_file = argp[1];
 }
 
 static void opt_graph(const char* argp[], int argc) {
@@ -146,7 +164,11 @@ static struct ArgHandler arguments[] = {
 
     // Make options
     { "--make"          , 0, opt_make               },
-    { "--make-makefile" , 1, opt_make_makefile      },
+    { "--make-file"     , 1, opt_make_file          },
+
+    // Ninja options
+    { "--ninja"         , 0, opt_ninja              },
+    { "--ninja-file"    , 1, opt_ninja_file         },
 
     // Graph options
     { "--graph"         , 0, opt_graph              },
@@ -164,12 +186,6 @@ int main(int argc, const char* argv[]) {
         fprintf(stderr, "Error: %s\n\n", err->msg);
         usage();
         return 2;
-    }
-
-    if (p.generator_type == t_none) {
-        fprintf(stderr, "Error: The generator type must be specified\n\n");
-        usage();
-        return 12;
     }
 
     struct BuildGraph graph;
@@ -190,13 +206,16 @@ int main(int argc, const char* argv[]) {
             make_generate(&graph, &p.u.make, &err);
             break;
         case t_graph:
-            graph_generate(&graph);
+            dot_generate(&graph);
             break;
+        case t_ninja:
+            ninja_generate(&graph, &p.u.ninja, &err);
         case t_dry:
             break;
-        default:
-            fprintf(stderr, "Generator is currently not supported. Ignoring...\n");
-            break;
+        case t_none:
+            fprintf(stderr, "Error: The generator type must be specified\n\n");
+            usage();
+            return 5;
     }
 
     if (err != NULL) {

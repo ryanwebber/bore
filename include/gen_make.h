@@ -1,5 +1,5 @@
-#ifndef MAKE_GENERATOR_H
-#define MAKE_GENERATOR_H
+#ifndef GEN_MAKE_H
+#define GEN_MAKE_H
 
 #include "build_graph.h"
 

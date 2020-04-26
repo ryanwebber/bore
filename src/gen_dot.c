@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include "graph_generator.h"
+#include "gen_dot.h"
 
 #define TAB "    "
 
-void graph_generate(struct BuildGraph *graph) {
+void dot_generate(struct BuildGraph *graph) {
     FILE *g = stderr;
 
     fprintf(g, "digraph D {\n");

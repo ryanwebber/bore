@@ -2,8 +2,8 @@
 #include <string.h>
 
 #include "error.h"
+#include "gen_make.h"
 #include "list.h"
-#include "make_generator.h"
 #include "strset.h"
 
 #define TAB "\t"
