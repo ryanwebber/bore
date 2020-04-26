@@ -239,8 +239,9 @@ local target = function (args)
 
     __bore.target({
         name = args.name,
-        phony = args.phony == true,
         build = args.build,
+        phony = args.phony == true,
+        default = args.default == true,
     })
 
     return targets[args.name]

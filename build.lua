@@ -60,14 +60,6 @@ target {
 }
 
 target {
-    name = "all",
-    phony = true,
-    build = rule {
-        deps = targets.bore
-    }
-}
-
-target {
     name = "install",
     phony = true,
     build = rule {
@@ -89,8 +81,6 @@ target {
         }
     }
 }
-
--- Tests
 
 target {
     name = "commontest",

@@ -47,6 +47,12 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
         return error_fmt(err, "Unable to open %s", opts->makefile);
     }
 
+    struct TSTree vtargets;
+    tstree_init(&vtargets);
+
+    struct StringSet defaults;
+    sset_init(&defaults);
+
     struct StringSet phonies;
     sset_init(&phonies);
 
@@ -56,9 +62,6 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
     struct List empty;
     list_init(&empty);
 
-    struct TSTree vtargets;
-    tstree_init(&vtargets);
-
     struct TargetList *tlist = graph->list;
     while (tlist != NULL) {
         struct ListNode *dep = list_first(&tlist->target->rule->deps);
@@ -67,19 +70,25 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
             dep = list_next(dep);
         }
 
+        if (tlist->target->primary) {
+            if (tlist->target->phony) {
+                sset_insert(&defaults, tlist->target->name);
+            } else {
+                struct ListNode *tout = list_first(&tlist->target->rule->outputs);
+                while (tout != NULL) {
+                    sset_insert(&defaults, tout->value);
+                    tout = list_next(tout);
+                }
+            }
+        }
+
         tlist = tlist->next;
     }
 
-    struct Target *all = graph_get_target(graph, "all");
-    if (all != NULL && all->phony) {
-        struct List* tins = &all->rule->inputs;
-        struct List* tdirs = &all->rule->dirs;
-        struct List* tcmds = &all->rule->commands;
-        struct List* tdeps = &all->rule->deps;
-        generateRule(m, all->name, tins, tdeps, tdirs, tcmds);
+    if (!list_empty(defaults.values)) {
+        generateRule(m, "all", defaults.values, &empty, &empty, &empty);
         fprintf(m, "\n");
-    } else {
-        all = NULL;
+        sset_insert(&phonies, "all");
     }
 
     // First pass, create rules and collect dir listings
@@ -126,13 +135,11 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
 
             sset_insert(&phonies, name);
 
-            if (all == NULL || strcmp(all->name, name) != 0) {
-                struct List* tins = &tlist->target->rule->inputs;
-                struct List* tdeps = &tlist->target->rule->deps;
-                struct List* tcmds = &tlist->target->rule->commands;
-                generateRule(m, name, tins, tdeps, &empty, tcmds);
-                fprintf(m, "\n");
-            }
+            struct List* tins = &tlist->target->rule->inputs;
+            struct List* tdeps = &tlist->target->rule->deps;
+            struct List* tcmds = &tlist->target->rule->commands;
+            generateRule(m, name, tins, tdeps, &empty, tcmds);
+            fprintf(m, "\n");
         } else if (tstree_test(&vtargets, tlist->target->name)) {
             generateRule(m, name, &tlist->target->rule->outputs, &empty, &empty, &empty);
             fprintf(m, "\n");

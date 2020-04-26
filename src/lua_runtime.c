@@ -171,10 +171,14 @@ static int target(lua_State *L) {
     // Grab the name and the rule
     lua_getfield(L, -1, "name");
     lua_getfield(L, -2, "phony");
-    lua_getfield(L, -3, "build");
+    lua_getfield(L, -3, "default");
+    lua_getfield(L, -4, "build");
 
     struct Rule *rule = rule_check(L, -1);
     luaL_argcheck(L, rule != NULL, 1, "Unexpected non-rule type received");
+    lua_pop(L, 1);
+
+    bool primary = lua_toboolean(L, -1);
     lua_pop(L, 1);
 
     bool phony = lua_toboolean(L, -1);
@@ -191,6 +195,7 @@ static int target(lua_State *L) {
     target->name = strclone(name);
     target->rule = cpy;
     target->phony = phony;
+    target->primary = primary;
 
     struct Error *err = NULL;
     graph_insert_target(graph, target, &err);
@@ -253,6 +258,12 @@ static int find_target(lua_State *L) {
 
     lua_pushstring(L, target->name);
     lua_setfield(L, -2, "name");
+
+    lua_pushboolean(L, target->phony);
+    lua_setfield(L, -2, "phony");
+
+    lua_pushboolean(L, target->primary);
+    lua_setfield(L, -2, "default");
 
     return 1;
 }
