@@ -163,5 +163,6 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
     sset_free(&phonies);
     sset_free(&dirs);
     list_free(&empty);
+    tstree_free(&vtargets);
 }
 
