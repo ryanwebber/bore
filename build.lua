@@ -100,6 +100,7 @@ target {
     build = rule {
         cmds = {
             "test/sanity/maketest -r " .. module.path(".") .. " -t /tmp/bore/maketest",
+            "test/sanity/ninjatest -r " .. module.path(".") .. " -t /tmp/bore/ninjatest",
         }
     }
 }

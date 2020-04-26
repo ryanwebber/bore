@@ -5,8 +5,8 @@ set -e
 usage() {
     echo "Usage: $0 [--tmp-dir] [--cwd]"
     echo
-    echo "Builds the repo with a generated Makefile, and ensures the generated binary"
-    echo "produces an identical Makefile to the first."
+    echo "Builds the repo with a generated ninja.build file, and ensures the generated"
+    echo "binary produces an identical build file to the first."
     echo
     echo "Options:"
     echo "  -t, --tmp-dir       A directory to use for temporary files"
@@ -19,7 +19,7 @@ PRIMER="Sanity Test"
 STEPS="7"
 
 REPO=.
-DIR=/tmp/bore/make
+DIR=/tmp/bore/ninja
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
@@ -60,16 +60,16 @@ cp -r "$REPO/src" "$REPO/pkg" "$REPO/include" "$REPO/Makefile" "$REPO/build.lua"
 echo "$PRIMER [3/$STEPS]: Building first binary..."
 make -C "$DIR"
 
-echo "$PRIMER [4/$STEPS]: Generating first Makefile..."
-sh -c "cd $DIR && ./bin/bore --make-file $DIR/out/Makefile_gen"
+echo "$PRIMER [4/$STEPS]: Generating first build file..."
+sh -c "cd $DIR && ./bin/bore --ninja-file $DIR/out/ninja_gen.build"
 make -C "$DIR" clean
 
 echo "$PRIMER [5/$STEPS]: Building second binary..."
-make -f "$DIR/out/Makefile_gen" -C "$DIR"
+ninja -f "$DIR/out/ninja_gen.build" -C "$DIR"
 
-echo "$PRIMER [6/$STEPS]: Generating second Makefile..."
-sh -c "cd $DIR && ./bin/bore --make-file $DIR/out/Makefile_gen2"
+echo "$PRIMER [6/$STEPS]: Generating second build file..."
+sh -c "cd $DIR && ./bin/bore --ninja-file $DIR/out/ninja_gen2.build"
 
-echo "$PRIMER [7/$STEPS]: Checking Makefile diffs"
-diff "$DIR/out/Makefile_gen" "$DIR/out/Makefile_gen2"
+echo "$PRIMER [7/$STEPS]: Checking build file diffs"
+diff "$DIR/out/ninja_gen.build" "$DIR/out/ninja_gen2.build"
 

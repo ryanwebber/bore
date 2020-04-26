@@ -5,6 +5,7 @@ test: commontest sanitytest
 
 sanitytest:
 	test/sanity/maketest -r . -t /tmp/bore/maketest
+	test/sanity/ninjatest -r . -t /tmp/bore/ninjatest
 
 commontest: bore
 	cd test/common && lua runner.lua test-*
