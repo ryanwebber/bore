@@ -9,7 +9,8 @@ local build = module.object()
 
 local prefix = type(config.prefix) == "string" and config.prefix or "/usr/local"
 
-local obj_files = array.map(module.glob("src/*.c"), function (i, source)
+local obj_files = {}
+for _, source in pairs(module.glob("src/*.c")) do
 
     local t = target {
         name = "c_" .. source,
@@ -23,8 +24,8 @@ local obj_files = array.map(module.glob("src/*.c"), function (i, source)
         }
     }
 
-    return i, t.outs
-end)
+    table.insert(obj_files, t.outs[1])
+end
 
 target {
     name = "luaBundle",
