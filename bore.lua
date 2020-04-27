@@ -51,12 +51,11 @@ target {
 target {
     name = "bore",
     default = true,
-    build = rule {
-        ins = { obj_files, targets.luaEmbed.outs },
-        outs = path.join(bin, "bore"),
-        cmds = {
-            cc .. " ${ins} -o ${outs} " .. lib
-        }
+    build = c.executable {
+        objects = { obj_files, targets.luaEmbed.outs },
+        binary = "bore",
+        libs = { "-llua", "-lm", "-ldl" },
+        bin_dir = module.path("bin"),
     }
 }
 
