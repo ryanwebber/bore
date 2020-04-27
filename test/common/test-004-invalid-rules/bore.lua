@@ -7,20 +7,6 @@ function assert_error(f)
 end
 
 assert_error(function()
-    rule {
-        outs = 3,
-        cmds = {}
-    }
-end)
-
-assert_error(function()
-    rule {
-        ins = {},
-        cmds = false
-    }
-end)
-
-assert_error(function()
     rule ""
 end)
 

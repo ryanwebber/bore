@@ -15,12 +15,10 @@ for _, source in pairs(module.glob("src/*.c")) do
     local t = target {
         name = "c_" .. source,
         alias = false,
-        build = rule {
-            ins = source,
-            outs = module.object(path.filename(source) .. ".o"),
-            cmds = {
-                table.concat({ cc, cflags, include, "-c", "-o", "${outs}", "${ins}" }, " ")
-            }
+        build = c_obj {
+            sources = source,
+            flags = { "-g", "-Wall", "-I " .. module.path("include") },
+            build_dir = module.object(),
         }
     }
 
@@ -31,7 +29,7 @@ target {
     name = "luaBundle",
     alias = false,
     build = rule {
-        ins = { module.path("pkg/core.lua") },
+        ins = { module.path("pkg/core.lua"), module.glob("pkg/**/*.lua") },
         outs = module.object("bundle.lua"),
         cmds = {
             "cat ${ins} > ${outs}"

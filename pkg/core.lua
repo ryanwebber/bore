@@ -21,6 +21,19 @@ local function doassert(fn)
     return results
 end
 
+local function optional_type(var, vtype, default)
+    if type(var) == vtype then
+        return var
+    else
+        return default
+    end
+end
+
+local function optional_string(var, def)      return optional_type(var, "string", def) end
+local function optional_table(var, def)       return optional_type(var, "table", def) end
+local function optional_number(var, def)      return optional_type(var, "number", def) end
+local function optional_function(var, def)    return optional_type(var, "function", def) end
+
 local function assert_type(var, vtype, msg)
     if type(var) ~= vtype then
         fatal("%s (got: %s)", msg, type(var))
@@ -38,23 +51,21 @@ local function assert_rule(var, msg)
     assert_type(var, "userdata", msg)
 end
 
-local function assert_strings(var, msg)
+local function extract_strings(var)
     if type(var) == "string" then
         return { var }
     elseif type(var) == "table" then
         local strs = {}
         for _, val in pairs(var) do
-            local extracted = assert_strings(val, msg)
+            local extracted = extract_strings(val)
             for _, s in pairs(extracted) do
                 table.insert(strs, s)
             end
         end
 
         return strs
-    elseif var == nil then
-        return {}
     else
-        fatal("%s (got: %s)", msg, type(var))
+        return {}
     end
 end
 
@@ -141,6 +152,9 @@ local array = {
         end
 
         return t
+    end,
+    join = function(arr)
+        return varsub_tostr(arr)
     end
 }
 
@@ -257,9 +271,9 @@ end
 defnrule("rule", {
     validator = function(args)
 
-        local ins = assert_strings(args.ins, "Rule inputs should be a string array")
-        local outs = assert_strings(args.outs, "Rule outputs should be a string array")
-        local cmds = assert_strings(args.cmds, "Rule commands should be a string array")
+        local ins = extract_strings(args.ins)
+        local outs = extract_strings(args.outs)
+        local cmds = extract_strings(args.cmds)
         local dirs = args.dirs
 
         if type(dirs) == "string" then
@@ -314,16 +328,32 @@ local config = setmetatable(__bore.config, {})
 local assert = {
     -- Assertions
     string = assert_string,
-    strings = assert_strings,
     number = assert_number,
     func = assert_function,
     table = assert_table,
-    bubble = doassert
+    bubble = doassert,
+}
+
+local optional = {
+    string = optional_string,
+    number = optional_number,
+    func = optional_func,
+    table = optional_table,
+    strings = function(value, default)
+        if type(value) == "string" then
+            return { value }
+        elseif type(value) == "table" then
+            return extract_strings(value)
+        else
+            return default
+        end
+    end,
 }
 
 local globals = {
     array = array,
     assert = assert,
+    optional = optional,
     defnrule = defnrule,
     fatal = fatal,
     submodule = submodule,
