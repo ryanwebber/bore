@@ -158,41 +158,6 @@ local array = {
     end
 }
 
--- A global list accumulating custom rule definitions
-local ruledefs = {}
-
--- The core lua component that makes build modules spit out the build tree
-local defnrule = function(name, def)
-
-    doassert(function()
-        assert_string(name, "Rule name must be a string")
-        assert_table(def, "Rule definition must be a table")
-        assert_function(def.generator, "Rule definition must have a generator field")
-
-        if ruledefs[name] ~= nil then
-            fatal("Rule '%s' is already defined", name)
-        end
-    end)
-
-    ruledefs[name] = function(args)
-        local validated_args = doassert(function()
-            assert_table(args, string.format("Arguments to rule '%s' must be a table", name))
-            if type(def.validator) == "table" then
-                return validate(args, def.validator)
-            elseif type(def.validator) == "function" then
-                return def.validator(args)
-            else
-                return args
-            end
-        end)
-
-        return def.generator(validated_args)
-    end
-
-    return ruledefs[name]
-
-end
-
 local submodule = function (relative_path)
     doassert(function()
         assert_string(relative_path, "Submodule path should be a string")
@@ -268,8 +233,13 @@ local target = function (args)
     return targets[args.name]
 end
 
-defnrule("rule", {
-    validator = function(args)
+-- Standard rules
+local rules = {
+    rule = function(args)
+
+        doassert(function()
+            assert_table(args, "Rule expected table")
+        end)
 
         local ins = extract_strings(args.ins)
         local outs = extract_strings(args.outs)
@@ -288,20 +258,11 @@ defnrule("rule", {
             end
         end
 
-        return {
+        local r = {
             ins = ins,
             outs = outs,
             cmds = cmds,
             dirs = dirs
-        }
-    end,
-    generator = function(args)
-
-        local r = {
-            cmds = args.cmds,
-            ins = args.ins,
-            outs = args.outs,
-            dirs = args.dirs
         }
 
         local data = setmetatable(r, {
@@ -320,7 +281,7 @@ defnrule("rule", {
 
         return __bore.rule(r)
     end
-})
+}
 
 local config = setmetatable(__bore.config, {})
 
@@ -360,6 +321,7 @@ local globals = {
     target = target,
     targets = targets,
     config = config,
+    rules = rules,
 }
 
 -- Update the global metatable to resolve the defined rules,
@@ -371,8 +333,8 @@ setmetatable(_G, {
             return value
         elseif globals[k] ~= nil then
             return globals[k]
-        elseif type(ruledefs[k]) == "function" then
-            return ruledefs[k]
+        elseif rules[k] ~= nil then
+            return rules[k]
         else
             error(string.format("access of undefined variable '%s'", k), 2)
         end

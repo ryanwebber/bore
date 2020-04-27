@@ -1,4 +1,3 @@
-
 local cc = "gcc"
 local cflags = "-g -Wall"
 local include = "-I include"
@@ -15,7 +14,7 @@ for _, source in pairs(module.glob("src/*.c")) do
     local t = target {
         name = "c_" .. source,
         alias = false,
-        build = c_obj {
+        build = c.obj {
             sources = source,
             flags = { "-g", "-Wall", "-I " .. module.path("include") },
             build_dir = module.object(),

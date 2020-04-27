@@ -33,9 +33,9 @@ rule r__luaEmbed
 build build/__lua_embed.o: r__luaEmbed build/bundle.lua | build/
 
 rule r__luaBundle
-  command = cat pkg/core.lua pkg/rules/c_obj.lua > build/bundle.lua
+  command = cat pkg/core.lua pkg/rules/c.lua > build/bundle.lua
 
-build build/bundle.lua: r__luaBundle pkg/core.lua pkg/rules/c_obj.lua | build/
+build build/bundle.lua: r__luaBundle pkg/core.lua pkg/rules/c.lua | build/
 
 rule r__c_src_argscan_c
   command = gcc -g -Wall -I include -c -o build/argscan.o src/argscan.c
