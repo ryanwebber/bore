@@ -1,0 +1,15 @@
+title: bore
+email: wbbr.ryan@gmail.com
+description: >-
+  A boring build file generator
+
+baseurl: ""
+url: "http://example.com"
+github_url:  "https://github.com/ryanwebber/bore"
+
+markdown: kramdown
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+

@@ -120,7 +120,6 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
     // Fourth: Emit the all target if needed
     if (!list_empty(defaults.values)) {
         emit_make_rule(m, "all", defaults.values, &empty, &empty);
-        fprintf(m, "\n");
         sset_insert(&phonys, "all");
     }
 
@@ -135,7 +134,7 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
 
         // If we're expecting to create a phony target, create it now
         if (sset_has(&phonys, name)) {
-            if (tlist->target->phony) {
+            if (tlist->target->phony || list_empty(touts)) {
                 // If we're a true phony, include commands we might have
                 emit_make_rule(m, name, tins, &empty, tcmds);
             } else {

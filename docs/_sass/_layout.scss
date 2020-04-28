@@ -1,0 +1,12 @@
+
+body {
+    padding: 6rem;
+    max-width: 768px;
+}
+
+@include media-query($on-palm) {
+    body {
+        padding: 2rem;
+    }
+}
+

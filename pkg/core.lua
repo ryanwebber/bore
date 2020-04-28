@@ -315,7 +315,6 @@ local globals = {
     array = array,
     assert = assert,
     optional = optional,
-    defnrule = defnrule,
     fatal = fatal,
     submodule = submodule,
     target = target,
