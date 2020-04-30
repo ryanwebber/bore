@@ -1,8 +1,8 @@
 target {
 	name = "bundle",
 	build = rule {
-		ins = module.glob("inputs/*.txt"),
-		outs = module.object("bundle.txt"),
+		ins = env.glob("inputs/*.txt"),
+		outs = env.object("bundle.txt"),
 		cmds = "cat ${ins} > ${outs}"
 	}
 }
@@ -12,7 +12,7 @@ target {
 	default = true,
 	build = rule {
 		ins = targets.bundle.outs,
-		outs = module.path("outs/reversed.txt"),
+		outs = env.path("outs/reversed.txt"),
 		cmds = "sort ${ins} > ${outs}"
 	}
 }

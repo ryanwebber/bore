@@ -158,15 +158,15 @@ local array = {
     end
 }
 
-local submodule = function (relative_path)
+local include = function (relative_path)
     doassert(function()
-        assert_string(relative_path, "Submodule path should be a string")
+        assert_string(relative_path, "Build template path should be a string")
     end)
 
     local build_file = path.join(root_proj_dir, relative_path)
     local local_dir = path.dirname(build_file)
 
-    local module = {
+    local template_env = {
         root_dir = root_proj_dir,
         build_dir = root_build_dir,
         local_dir = local_dir,
@@ -181,7 +181,7 @@ local submodule = function (relative_path)
         end,
     }
 
-    local env = setmetatable({ module = module }, {
+    local env = setmetatable({ env = template_env }, {
         __index = function(self, k)
             if k == "__bore" then
                 -- Hide the internal APIs
@@ -192,7 +192,7 @@ local submodule = function (relative_path)
         end
     })
 
-    __bore.submodule(build_file, env)
+    __bore.include(build_file, env)
 end
 
 local targets = setmetatable({}, {
@@ -285,9 +285,7 @@ local rules = {
 
 local config = setmetatable(__bore.config, {})
 
--- Setup global utilities
 local assert = {
-    -- Assertions
     string = assert_string,
     number = assert_number,
     func = assert_function,
@@ -312,11 +310,7 @@ local optional = {
 }
 
 local globals = {
-    array = array,
-    assert = assert,
-    optional = optional,
-    fatal = fatal,
-    submodule = submodule,
+    include = include,
     target = target,
     targets = targets,
     config = config,

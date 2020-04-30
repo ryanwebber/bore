@@ -5,7 +5,7 @@ function assert_equals(a, b)
     end
 end
 
-submodule("other/bore.lua")
+include("other/bore.lua")
 
 target {
     name = "all",
@@ -16,5 +16,5 @@ target {
     }
 }
 
-assert_equals(targets.all.cmds[1], module.path("other", "hello.txt"))
+assert_equals(targets.all.cmds[1], env.path("other", "hello.txt"))
 

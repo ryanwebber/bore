@@ -131,7 +131,7 @@ static int rule_gc(lua_State *L) {
     return 0;
 }
 
-static int submodule(lua_State *L) {
+static int include(lua_State *L) {
     const char* path = lua_tostring(L, 1);
     if (luaL_loadfile(L, path)) {
         lua_error(L);
@@ -274,8 +274,8 @@ static void runtime_load_libs(struct LuaRuntime *runtime) {
 }
 
 static void runtime_load_globals(lua_State *L, struct RuntimeGlobals *globals) {
-    lua_pushcfunction(L, submodule);
-    lua_setfield(L, -2, "submodule");
+    lua_pushcfunction(L, include);
+    lua_setfield(L, -2, "include");
 
     lua_pushcfunction(L, target);
     lua_setfield(L, -2, "target");
@@ -359,8 +359,8 @@ void runtime_evaluate(struct LuaRuntime *runtime,
     // Evaluate the core
     lua_call(L, 0, LUA_MULTRET);
 
-    // Finally, load the main build module as a submodule and call it
-    lua_getglobal(L, "submodule");
+    // Finally, load the main build template and call it
+    lua_getglobal(L, "include");
     lua_pushstring(L, build_file);
 
     if (lua_pcall(L, 1, LUA_MULTRET, 0)) {

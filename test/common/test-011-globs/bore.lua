@@ -1,5 +1,5 @@
 
-local files = module.glob(path.join("files", "*.txt"))
+local files = env.glob(path.join("files", "*.txt"))
 
 if #files ~= 4 then
     error("Glob expected 4 files, but only got " .. #files)

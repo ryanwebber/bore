@@ -5,13 +5,13 @@ function assert_equals(a, b)
     end
 end
 
-submodule("other/build.lua")
+include("other/build.lua")
 
 target {
     name = "test1",
     build = rule {
         ins = {},
-        outs = module.object("a"),
+        outs = env.object("a"),
         cmds = {},
     }
 }
