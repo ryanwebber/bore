@@ -160,7 +160,33 @@ void make_generate(struct BuildGraph *graph, struct MakeOpts *opts, struct Error
         dir = list_next(dir);
     }
 
-    // Seventh: Emit the .PHONY target
+    // Seventh: Emit the help rule
+    if (!sset_has(&phonys, "help") &&
+            !list_empty(phonys.values) &&
+            graph_dep_search(graph, "help") == NULL) {
+
+        sset_insert(&phonys, "help");
+        fprintf(m, "help:\n");
+        fprintf(m, "\t@echo \"Supported targets:\"\n");
+
+        struct ListNode *target = list_first(phonys.values);
+        while (target != NULL) {
+            struct Target* discovered = graph_get_target(graph, target->value);
+            if (discovered != NULL && discovered->description != NULL) {
+                fprintf(m, "\t@echo \"    %-30s%s\"\n", target->value, discovered->description);
+            } else if (discovered != NULL) {
+                fprintf(m, "\t@echo \"    %s\"\n", target->value);
+            } else if (strcmp(target->value, "all") == 0) {
+                fprintf(m, "\t@echo \"    %-30s%s\"\n", target->value, "Build the default targets");
+            }
+
+            target = list_next(target);
+        }
+
+        fprintf(m, "\n");
+    }
+
+    // Eighth: Emit the .PHONY target
     if (!list_empty(phonys.values)) {
         fprintf(m, ".PHONY:");
 

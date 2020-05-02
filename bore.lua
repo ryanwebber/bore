@@ -51,6 +51,7 @@ target {
 target {
     name = "bore",
     default = true,
+    description = "Build the Bore executable",
     build = c.executable {
         objects = { obj_files, targets.luaEmbed.outs },
         binary = "bore",
@@ -61,6 +62,7 @@ target {
 
 target {
     name = "install",
+    description = "Install Bore to " .. prefix,
     phony = true,
     build = rule {
         ins = targets.bore.name,
@@ -73,6 +75,7 @@ target {
 
 target {
     name = "clean",
+    description = "Remove all build artifacts",
     phony = true,
     build = rule {
         cmds = {
@@ -84,6 +87,7 @@ target {
 
 target {
     name = "commontest",
+    description = "Run the common test suite",
     phony = true,
     build = rule {
         ins = targets.bore.name,
@@ -93,6 +97,7 @@ target {
 
 target {
     name = "sanitytest",
+    description = "Run the sanity tests",
     phony = true,
     build = rule {
         cmds = {
@@ -104,6 +109,7 @@ target {
 
 target {
     name = "test",
+    description = "Run all tests",
     phony = true,
     build = rule {
         ins = { targets.commontest.name, targets.sanitytest.name }

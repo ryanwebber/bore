@@ -17,9 +17,9 @@ A cross-platform build file generator for make and Ninja using templates written
         * [Caveats](#caveats)
  * [Build Templates](#build-templates)
     * [Defining Targets](#defining-targets)
-    * [Rules](#rules)
+    * [Rule Objects](#rule-objects)
     * [Environment](#environment)
- * [Examples](#)
+ * [Examples](#examples)
  * [API Reference](#)
     * [Variables](#)
         * [`config`](#config)
@@ -29,16 +29,16 @@ A cross-platform build file generator for make and Ninja using templates written
         * [`targets`](#targets)
 
     * [Functions](#)
-        * [`env.glob()`](#)
-        * [`env.object()`](#)
-        * [`env.path()`](#)
-        * [`glob()`](#)
-        * [`include(path)`](#)
-        * [`path.basename()`](#)
-        * [`path.dirname()`](#)
-        * [`path.extension()`](#)
-        * [`path.filename()`](#)
-        * [`path.join()`](#)
+        * [`env.glob()`](#envglobpattern)
+        * [`env.object()`](#envobject)
+        * [`env.path()`](#envpath)
+        * [`glob()`](#globpattern)
+        * [`include()`](#includepath)
+        * [`path.basename()`](#pathbasenamepath)
+        * [`path.dirname()`](#pathdirnamepath)
+        * [`path.extension()`](#pathextensionpath)
+        * [`path.filename()`](#pathfilenamepath)
+        * [`path.join()`](#pathjoin)
         * [`rule()`](#ruleargs)
         * [`submodule()`](#submodulepath)
         * [`target()`](#targetargs)
@@ -68,6 +68,7 @@ handful of examples.
 The list of features for Bore is intentionally small and targeted at things Make and Ninja
 aren't good at on their own (by their own design):
  * Automatic directory creation for build artifacts
+ * Automatic 'help' target
  * Out-of-source builds made easy
  * File globbing
 
@@ -131,8 +132,10 @@ how a [rule](#rules) will be generated to the resulting build files.
 #### Example
 ```lua
 -- bore.lua
+
 target {
     name = "MyTarget",
+    description = "Copies some files",
     build = rule {
         ins = { "input.txt" },
         outs = { "output.txt" },
@@ -193,7 +196,11 @@ MyTarget: output.txt
 With this generated Makefile, you could build `output.txt` by running `make output.txt` or
 `make MyTarget`, which is a phony rule for the concrete `output.txt` build rule.
 
-### Rules
+Bore will also generate a `help` target, provided it does not conflict with any other
+build rules. This is a phony target that when run will print a summary of the major
+targets and their descriptions.
+
+### Rule Objects
 One of the main properties of targets is the build property. The build property must be a 
 rule, which is a special type of object in Bore that is specially validated and interpolated,
 but has no other real use. A rule can only be created by calling the global
@@ -220,6 +227,7 @@ Each Bore template that gets evaluated has a special global variable called `env
 
 #### Example
 ```lua
+
 -- bore.lua
 
 -- Prints the build directory configured with --build-dir
@@ -244,9 +252,71 @@ The tempate is loaded into the same Lua runtime as the one that referenced it bu
 own `env` variable, and any targets defined in the new template will end up in the same
 global [`targets`](#targets) table.
 
+
+## Examples
+You can learn most of the Bore API from looking at a couple examples, so let's look at a few.
+
+### Sorting Files
+This example showcases variable substitution in commands and variable chaining. The default
+target will concatenate all the text files in `input/` and sort them into `outs/reversed.txt`.
+It also demonstrates out-of-source builds by using `env.object` to resolve a path into
+the build folder specified when running Bore.
+
+```lua
+-- bore.lua
+
+target {
+	name = "bundle",
+	build = rule {
+		ins = env.glob("inputs/*.txt"),
+		outs = env.object("bundle.txt"),
+		cmds = "cat ${ins} > ${outs}"
+	}
+}
+
+target {
+	name = "sort",
+	default = true,
+	build = rule {
+		ins = targets.bundle.outs,
+		outs = env.path("outs", "reversed.txt"), -- outs/reversed.txt
+		cmds = "sort ${ins} > ${outs}"
+	}
+}
+```
+
+### C Executable
+This is an example which uses the `c` build rules that are included with Bore. These
+are just functions that return a `rule`, which is why you can use them like you would
+by calling [rule()](#ruleargs).
+
+```lua
+-- bore.lua
+local program = "hello"
+
+target {
+    name = "hello_obj",
+    alias = false,
+    build = c.obj {
+        sources = "src/main.c",
+        build_dir = env.build_dir
+    }
+}
+
+target {
+    name = program,
+    default = true,
+    build = c.executable {
+        objects = targets.hello_obj.outs,
+        binary = program,
+        bin_dir = "bin"
+    }
+}
+```
+
 ## API Reference 
 
-### `config`
+### [`config`](#config)
 The `config` table is populated with the key-value pairs passed to Bore via the `--config` flag. These can be used to configure the install prefix, details of the architecture, or other details that change how the build targets are generated.
 
 #### Example
@@ -258,18 +328,18 @@ The `config` table is populated with the key-value pairs passed to Bore via the 
 print(config.message)
 ```
 
-### `env.build_dir`
+### [`env.build_dir`](#envbuild_dir)
 The specified out-of-source build directory for the project. Configured with `--build-dir`.
 
-### `env.local_dir`
+### [`env.local_dir`](#envlocal_dir)
 The directory of the current build template being evaluated, relative to the root project
 directory. For the root build template, this is just an empty string.
 
-### `rules`
+### [`rules`](#rules)
 A table containing the system build rules. See [the list of build rules](#) for more details.
 The values of this table are also available in the global scope under the same name.
 
-### `targets`
+### [`targets`](#targets)
 Targets that are defined can be accessed through the global `targets` table.
 This is useful for chaining the inputs of one target to the output of another.
 
@@ -304,8 +374,109 @@ Values in the `targets` table will have the following properties:
  * `phony` - If the target is a phony target
  * `default` - If the target is a default target
 
-### `rule(args)`
-Create a new rule primative. Again, we typically omit the brackets. Calling `rule` returns a special type of lua object that is expected when creating targets. The table passed to `rule` describe the inputs, output files, output directories, and commands for the target. 
+### [`env.glob(pattern)`](#envglobpattern)
+Equivilent to `glob(path.join(local_dir, pattern))`. See also [`glob()`](#globpattern)
+
+### [`env.object(...)`](#envobject)
+Equivilent to `path.join(env.build_dir, ...)`. See also [`path.join()`](#pathjoin)
+
+### [`env.path(...)`](#envpath)
+Equivilent to `path.join(env.local_dir, ...)`. See also [`path.join()`](#pathjoin)
+
+### [`glob(pattern)`](#globpattern)
+Attempts to resolve the provided pattern into a list of files. The pattern should be a string.
+This function will error if there are no files matched. Globs are resolved immediately
+in Bore and _not_ passed to the generators, since most generators do not support wildcard
+matching in files in a generalizable way. Note that this may mean you need to re-generate
+your resulting build files if using globs and you've added a new file.
+
+#### Example
+```lua
+-- bore.lua
+
+-- <project root>
+--   ├─ bore.build
+--   ├─ x.txt
+--   ├─ y.txt
+--   └─ z.txt
+
+glob("*.txt") -- { "x.txt", "y.txt", "z.txt" }
+```
+
+### [`include(path)`](#includepath)
+Immediately load and evaluate the build template specified by the given path. The path
+is a string and is relative the the project root.
+
+The evaluated template is run in the same Lua runtime as the current build template, but
+is given a different `env` variable that represents it's relative path from the project
+root.
+
+#### Example
+```lua
+-- build.lua
+
+-- immediately evaluate other/bore.lua
+include("other/bore.lua")
+```
+
+```lua
+-- other/build.lua
+
+print("Loaded!")
+
+-- This template can create targets that can be referenced in the root build template
+```
+
+### [`path.basename(path)`](#pathbasenamepath)
+Get the basename of the given path. Expects a string to be passed.
+
+#### Example
+```lua
+print(path.basename("a/b/c/d.txt")) -- "d.txt"
+print(path.basename("a/b")) -- "b"
+```
+
+### [`path.dirname(path)`](#pathdirnamepath)
+Get the directory portion of the given path. Expects a string to be passed.
+
+#### Example
+```lua
+print(path.dirname("a/b/c/d.txt")) -- "a/b/c/d"
+print(path.dirname("b.txt")) -- ""
+```
+
+### [`path.extension(path)`](#pathextensionpath)
+Get the extension of the given file path. Expects a string to be passed.
+
+#### Example
+```lua
+print(path.extension("a/b/c/d.txt")) -- "txt"
+print(path.extension("a/b")) -- ""
+```
+
+### [`path.filename(path)`](#pathfilename)
+Get the filename of the given file path. Expects a string to be passed.
+
+#### Example
+```lua
+print(path.basename("a/b/c/d.txt")) -- "d"
+print(path.basename("a/b")) -- "b"
+```
+
+### [`path.join(...)`](#pathjoin)
+Creates a path string from the supplied arguments. Each argument must be a string. This
+function makes sure to use os-specific logic to create path strings.
+
+#### Example
+```lua
+print(path.join("a", "b", "c", "d.txt"))
+-- "a/b/c/d.txt" on UNIX machines
+```
+
+### [`rule(args)`](#ruleargs)
+Create a new rule primative. Calling `rule` returns a special type of lua object that is
+expected when creating targets. The table passed to `rule` describe the inputs, output files,
+output directories, and commands for the target. 
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -314,12 +485,14 @@ Create a new rule primative. Again, we typically omit the brackets. Calling `rul
 | `dirs` | `string`/`table` | A list of strings that represent the directories required to be created before building the target can succeed. This typically is not explicitly set, and defaults to the directories of the `outs`. |
 | `cmds` | `string`/`table` | A list of strings that represent the commands to run to build the `outs` from the `ins`. Command strings are expanded with the provided `ins` and `outs` by the special tokens `${ins}` and `${outs}` respectively. |
 
-### `target(args)`
-Define a new target. Lua syntax permits the developer to omit the brackets when calling a function with a table or string, so typically we omit them. The table passed to `target` describes how the target gets translated as build rules in the generated build files.
+### [`target(args)`](#targetargs)
+Define a new target. The table passed to `target` describes how the target gets translated
+as build rules in the generated build files.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `name` | `string` | The name of the target. Must be unique. __Required.__ |
+| `description` | `string` | A description of the target. If a phony rule can be generated for this target, then it will appear in the help target along with this description. |
 | `phony` | `boolean` | Whether the targt should be considered phony or not. Phony targets must not describe any outputs. |
 | `default` | `boolean` | Whether to include the target as part of the default build (ex. the `all` target in a Makefile, and as a default target in Ninja). |
 | `build` | `rule` | A rule that describes how to build this target. __Required.__ |

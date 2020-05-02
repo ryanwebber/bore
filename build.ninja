@@ -145,3 +145,8 @@ build bin/: mkdir
 
 default bore
 
+rule help
+ command = 	echo "Supported targets:" && echo "    bore                          Build the Bore executable" && echo "    install                       Install Bore to /usr/local" && echo "    clean                         Remove all build artifacts" && echo "    commontest                    Run the common test suite" && echo "    sanitytest                    Run the sanity tests" && echo "    test                          Run all tests"
+
+build help: help
+

@@ -5,6 +5,7 @@
 
 struct Target {
     char *name;
+    char *description;
     bool phony;
     bool primary;
     bool alias;

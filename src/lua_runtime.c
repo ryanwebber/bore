@@ -175,12 +175,19 @@ static int target(lua_State *L) {
     char *name = strclone(lua_tostring(L, -1));
     lua_pop(L, 1);
 
+    lua_getfield(L, -1, "description");
+    char *description = NULL;
+    if (lua_type(L, -1) == LUA_TSTRING)
+        description = strclone(lua_tostring(L, -1));
+    lua_pop(L, 1);
+
     struct Rule *cpy = malloc(sizeof(struct Rule));
     rule_init(cpy);
     rule_copy(cpy, rule);
 
     struct Target *target = malloc(sizeof(struct Target));
     target->name = name;
+    target->description = description;
     target->rule = cpy;
     target->phony = phony;
     target->primary = primary;

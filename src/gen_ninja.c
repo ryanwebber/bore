@@ -202,6 +202,33 @@ void ninja_generate(struct BuildGraph *graph, struct NinjaOpts *opts, struct Err
         fprintf(m, "\n");
     }
 
+    // Seventh: Emit the help rule
+    if (!sset_has(&phonys, "help") &&
+            !list_empty(phonys.values) &&
+            graph_dep_search(graph, "help") == NULL) {
+
+        sset_insert(&phonys, "help");
+        fprintf(m, "rule help\n command = ");
+        fprintf(m, "\techo \"Supported targets:\"");
+
+        struct ListNode *target = list_first(phonys.values);
+        while (target != NULL) {
+            struct Target* discovered = graph_get_target(graph, target->value);
+            if (discovered != NULL && discovered->description != NULL) {
+                fprintf(m, " && echo \"    %-30s%s\"", target->value, discovered->description);
+            } else if (discovered != NULL) {
+                fprintf(m, " && echo \"    %s\"", target->value);
+            } else if (strcmp(target->value, "all") == 0) {
+                fprintf(m, " && echo \"    %-30s%s\"", target->value, "Build the default targets");
+            }
+
+            target = list_next(target);
+        }
+
+        fprintf(m, "\n\n");
+        fprintf(m, "build help: help\n\n");
+    }
+
     sset_free(&defaults);
     sset_free(&phonys);
     sset_free(&dirs);
