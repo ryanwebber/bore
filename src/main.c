@@ -24,7 +24,6 @@ static void usage() {
         "Optional arguments:\n"
         "  -h,--help                show this help message and exit.\n"
         "  -b,--build-dir <DIR>     the out-of-source build folder for intermediate files.\n"
-        "  -C,--directory <DIR>     the root project directory.\n"
         "  --config <KEY> <VALUE>   assign a key-value pair to the lua config table.\n"
         "  --dry-run                parse the build file, but don't generate anything.\n"
         "  -f,--file <FILE>         the root lua build descriptor file.\n"
@@ -53,7 +52,6 @@ enum GeneratorType {
 };
 
 struct Program {
-    const char* project_root;
     const char* build_file;
     const char* build_dir;
     struct KeyValueList config;
@@ -66,7 +64,6 @@ struct Program {
 };
 
 static struct Program p = {
-    .project_root = "",
     .build_file = "bore.lua",
     .build_dir = "build",
     .config = { NULL },
@@ -80,10 +77,6 @@ static void opt_help(const char* argp[], int argc) {
 
 static void opt_build_dir(const char* argp[], int argc) {
     p.build_dir = argp[1];
-}
-
-static void opt_project_root(const char* argp[], int argc) {
-    p.project_root = argp[1];
 }
 
 static void opt_build_file(const char* argp[], int argc) {
@@ -147,9 +140,6 @@ static struct ArgHandler arguments[] = {
     { "-b"              , 1, opt_build_dir          },
     { "--build-dir"     , 1, opt_build_dir          },
 
-    { "-C"              , 1, opt_project_root       },
-    { "--directory"     , 1, opt_project_root       },
-
     { "--config"        , 2, opt_config             },
 
     { "--dry-run"       , 0, opt_dry                },
@@ -190,7 +180,7 @@ int main(int argc, const char* argv[]) {
 
     struct LuaRuntime runtime;
     runtime_init(&runtime);
-    runtime_evaluate(&runtime, p.project_root, p.build_dir, p.build_file, &p.config, &graph, &err);
+    runtime_evaluate(&runtime, p.build_file, p.build_dir,&p.config, &graph, &err);
     runtime_free(&runtime);
 
     if (err != NULL) {

@@ -6,6 +6,7 @@
 #include "lua_fglob.h"
 #include "lua_path.h"
 #include "lua_runtime.h"
+#include "path.h"
 #include "utils.h"
 
 static const char *kRuleMetatableMarker = "Bore.RuleMarker";
@@ -17,7 +18,7 @@ extern const char _binary_build_bundle_lua_end[];
 
 struct RuntimeGlobals {
     const char *build_dir;
-    const char *root_dir;
+    const char *build_file;
     struct KeyValueList *config;
 };
 
@@ -289,7 +290,17 @@ static void runtime_load_globals(lua_State *L, struct RuntimeGlobals *globals) {
     lua_pushstring(L, globals->build_dir);
     lua_setfield(L, -2, "build_path");
 
-    lua_pushstring(L, globals->root_dir);
+    const char *project_path;
+    size_t len = path_dirname(globals->build_file, &project_path);
+
+    char buf[len + 1];
+    strncpy(buf, project_path, len);
+    buf[len] = '\0';
+
+    char buf2[len + 1];
+    len = path_normalize(buf, buf2, len + 1);
+
+    lua_pushlstring(L, buf2, len);
     lua_setfield(L, -2, "project_path");
 
     lua_newtable(L);
@@ -313,9 +324,8 @@ void runtime_free(struct LuaRuntime *runtime) {
 }
 
 void runtime_evaluate(struct LuaRuntime *runtime,
-        const char* root_dir,
-        const char* build_dir,
         const char* build_file,
+        const char* build_dir,
         struct KeyValueList *config,
         struct BuildGraph *graph,
         struct Error **err) {
@@ -341,7 +351,7 @@ void runtime_evaluate(struct LuaRuntime *runtime,
 
     struct RuntimeGlobals globals = {
         .build_dir = build_dir,
-        .root_dir = root_dir,
+        .build_file = build_file,
         .config = config,
     };
 
@@ -360,8 +370,11 @@ void runtime_evaluate(struct LuaRuntime *runtime,
     lua_call(L, 0, LUA_MULTRET);
 
     // Finally, load the main build template and call it
+    const char *buildfile_basename;
+    size_t buildfile_basename_len = path_basename(build_file, &buildfile_basename);
+
     lua_getglobal(L, "include");
-    lua_pushstring(L, build_file);
+    lua_pushlstring(L, buildfile_basename, buildfile_basename_len);
 
     if (lua_pcall(L, 1, LUA_MULTRET, 0)) {
         return error_fmt(err, "%s", lua_tostring(L, -1));

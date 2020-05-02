@@ -17,7 +17,7 @@ A cross-platform build file generator for make and Ninja using templates written
         * [Caveats](#caveats)
  * [Build Templates](#build-templates)
     * [Defining Targets](#defining-targets)
-    * [Creating Rules](#defining-rules)
+    * [Rules](#rules)
     * [Environment](#environment)
  * [Examples](#)
  * [API Reference](#)
@@ -25,7 +25,6 @@ A cross-platform build file generator for make and Ninja using templates written
         * [`config`](#config)
         * [`env.build_dir`](#envbuild_dir)
         * [`env.local_dir`](#envlocal_dir)
-        * [`env.root_dir`](#envroot_dir)
         * [`rules`](#rules)
         * [`targets`](#targets)
 
@@ -46,7 +45,7 @@ A cross-platform build file generator for make and Ninja using templates written
 
 
 ## Introduction
-Bore is a tool I wrote to ease my frustrations with other build systems for projects
+Bore is a small tool I wrote to address my frustrations with other build systems for projects
 that were small but required highly customized builds. I wanted build templates that were
 as conceptually simple to write as Makefiles, but allowed me a little bit more flexibility
 and modularity.
@@ -58,23 +57,24 @@ battle tested, nor does it have a community behind it.
 Bore is a command-line utility for generating build files for Make and Ninja from build
 templates written in Lua. That is, Bore does not build your project. It generates the inputs
 to other build systems - primarily Make and Ninja - that _can_ build your project. It attempts
-to address some of pain points of writing raw build files without having resorting to using
-more complex build systems such as CMake, Meson, Gradle, etc.
+to address some of pain points of writing raw build files without having to buy up to more
+complex and feature-rich meta build systems such as CMake, Meson, Gradle, etc.
 
-The goal of Bore is to be as intuitive and fast as possible. Bore has a much smaller surface
-area than most alternative meta build systems, and can be learned by looking at just a
+The goal of Bore is to be as intuitive and fast as possible. Bore has a much smaller API surface
+than most alternative meta build systems, and can be learned by looking at just a
 handful of examples.
 
 ### Features
-The list of features is pretty small, because the API is pretty small:
+The list of features for Bore is intentionally small and targeted at things Make and Ninja
+aren't good at on their own (by their own design):
  * Automatic directory creation for build artifacts
- * Out-of-source build configuration
+ * Out-of-source builds made easy
  * File globbing
 
 ## Getting Started
 
 ### Installation
-There are currently no pre-built Bore binaries, so it must be built from scratch. It's only
+There are currently no pre-built Bore binaries, so it must be built from scratch. Its only
 dependency is `lib-lua`. The repository also has it's `build.ninja` file checked in so it
 can be built without an existing bore executable. It's written in C, and can be compiled
 pretty much anywhere if you already have Ninja and `lib-lua`.
@@ -88,11 +88,15 @@ $ ninja install
 
 ### Running Bore
 Bore can be run by simply running `bore --[ninja|make]`. The generator must be specified.
-Bore looks for a `bore.lua` file in the same directory by default. The project directory
-can be changed with the `-C` flag, and the default build file can be specified with the
-`-f` flag, similar to both Make and Ninja. The project directory should nearly always be
-set to the location of your source files, since the project directory is used as the
-relative path during build file generation (see the [`env`](#envroot_dir) global).
+Bore looks for a `bore.lua` file in the current directory by default, but can be
+specified with the `-f` flag, similar to both Make and Ninja. Bore does _not_ manipulate
+paths to files specified in build templates, regardless of where the build template is
+in respect to the current working directory of the shell. This is because both Make and
+Ninja already have support for this built in. There is one exception to this which is during
+file globbing, where Bore will transform paths relative to the shells working directory
+in order to resolve the files correctly, at which point they will be normalized back
+to the root of the project. In most cases, this just works and you don't need to
+know about it.
 
 You can also run Bore with `--dry-run` to parse and validate the build file without actually
 generating any outputs.
@@ -107,8 +111,8 @@ The Dot generator is used to create a graph describing the relationships between
 and outputs of the targets described. 
 
 #### Caveats
-Because of subtle differences in the target build systems, there are minor caveats with
-each.
+Because of subtle differences in the target build systems, there are some minor caveats
+to be aware of.
 
 | __Ninja__ | Ninja supports only one command, so targets that have multiple commands listed will be joined together. For example, two commands `a` and `b` will become `a && b`. |
 | __Make__  | Makefiles don't support multiple outputs for a build rule. Targets that produce multiple outputs will be generated into a build rule for each output, with the same commands. This might cause non-optimal build rules in some cases, so in general multiple targets producing one output are preferred over fewer targets producing multiple outputs. |
@@ -120,9 +124,9 @@ in the Lua runtime that is used to define the targets of the project.
 
 ### Defining Targets
 The main thing that build templates do is define the build targets of the project. In fact,
-the only way the template can influence the generators is by defining targets. Targets
+the only way the template can influence the generation process is by defining targets. Targets
 are defined by calling the global [`target(args)`](#targetargs) function. A target describes
-how a [rule](#defining-rules) will be generated to the resulting build files.
+how a [rule](#rules) will be generated to the resulting build files.
 
 #### Example
 ```lua
@@ -140,20 +144,18 @@ target {
 __Note:__ When calling a function with a string or table literal in Lua like we're doing
 here, we can omit the parenthesis to the function.
 
-This example creates a target named `"MyTarget"`, and will use the assiciated rule to determine
-how to generate appropriate riles in the generated build files. Besides the `name` and `rule`
+This example creates a target named `"MyTarget"`, and will use the associated rule to determine
+how to generate appropriate rules in the generated build files. Besides the `name` and `rule`
 property of the table, there are several more that are described in the
-[API Reference](#targetargs). 
-
-The rule is a special object that defines the inputs, outputs, and commands for building
-the target. We'll look more at rules in the next section.
+[API Reference](#targetargs). A rule is a special object that defines the inputs, outputs,
+and commands for building the target. We'll look more at rules in the next section.
 
 The name of the target serves multiple purposes:
- 1. Bore will use the name to generate a phony build rule for the target
+ 1. Bore will use the name in an attempt to generate a phony build rule for the target
  2. When a target is defined, Bore will place a special reference to it in the global
     [`targets`](#targets) table under it's defined name. This means you can reference the
     target when created other targets, which is particularly useful for specifying that the
-    inputs to one target is the outputs of another. To continue our example above:
+    inputs to one target are the outputs of another. To continue our example above:
     ```lua
     target {
         name = "MyOtherTarget",
@@ -165,7 +167,7 @@ The name of the target serves multiple purposes:
     }
     ```
 
-    This second target will use the outputs of the first target as it's inputs, and will
+    This second target will use the outputs of the first target as its inputs, and will
     generate a build rule that will contain `echo output.txt`. You might also notice the
     special `${ins}` reference here, and it just means to interpolate the `ins` to the rule
     in place, but we'll also learn more about that in the next section.
@@ -177,8 +179,8 @@ also attempt to automatically generate a phony build rule for each non-phony tar
 using the target name if there are no collisions with any concrete output files in the
 project. 
 
-The Makefile in our example above includes an automatic phony target and looks something
-like:
+The Makefile in our original example above includes an automatic phony target and looks
+something like:
 ```make
 output.txt: input.txt
 	cp input.txt output.txt
@@ -191,7 +193,7 @@ MyTarget: output.txt
 With this generated Makefile, you could build `output.txt` by running `make output.txt` or
 `make MyTarget`, which is a phony rule for the concrete `output.txt` build rule.
 
-### Defining Rules
+### Rules
 One of the main properties of targets is the build property. The build property must be a 
 rule, which is a special type of object in Bore that is specially validated and interpolated,
 but has no other real use. A rule can only be created by calling the global
@@ -220,9 +222,6 @@ Each Bore template that gets evaluated has a special global variable called `env
 ```lua
 -- bore.lua
 
--- Prints the project root directory
-print(env.root_dir) -- ""
-
 -- Prints the build directory configured with --build-dir
 -- (defaults to "build/")
 print(env.build_dir -- "build/"
@@ -235,12 +234,15 @@ print(env.local_dir)
 print(env.path("a", "b"))
 
 -- The same as glob(path.join(env.local_dir, "*.txt"))
-print(glob("*.txt"))
+print(env.glob("*.txt"))
 
 ```
 
-The root build templates (in fact, any build template) can be loaded by calling
-[`include(path)`](#includepath) which will immediately load and evaluate the template.
+The root build template (in fact, any build template) can load another template by calling
+[`include(path)`](#includepath) which will immediately load and evaluate the given template.
+The tempate is loaded into the same Lua runtime as the one that referenced it but has it's
+own `env` variable, and any targets defined in the new template will end up in the same
+global [`targets`](#targets) table.
 
 ## API Reference 
 
@@ -260,15 +262,12 @@ print(config.message)
 The specified out-of-source build directory for the project. Configured with `--build-dir`.
 
 ### `env.local_dir`
-The directory of the current build template being evaluated.
-
-### `env.root_dir`
-The root directory of the project. Specifically, this is equal to the `env.local_dir` of
-the top-level build template.
+The directory of the current build template being evaluated, relative to the root project
+directory. For the root build template, this is just an empty string.
 
 ### `rules`
 A table containing the system build rules. See [the list of build rules](#) for more details.
-The values of this table are also available in the global scope under the key name.
+The values of this table are also available in the global scope under the same name.
 
 ### `targets`
 Targets that are defined can be accessed through the global `targets` table.

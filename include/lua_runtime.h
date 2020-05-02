@@ -19,9 +19,8 @@ void runtime_free(struct LuaRuntime *runtime);
 
 void runtime_evaluate(
         struct LuaRuntime *runtime,
-        const char* root_dir,
-        const char* build_dir,
         const char* build_file,
+        const char* build_dir,
         struct KeyValueList *config,
         struct BuildGraph *graph,
         struct Error **err);

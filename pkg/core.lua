@@ -164,10 +164,10 @@ local include = function (relative_path)
     end)
 
     local build_file = path.join(root_proj_dir, relative_path)
-    local local_dir = path.dirname(build_file)
+    local qualified_dir = path.dirname(build_file);
+    local local_dir = path.dirname(relative_path)
 
     local template_env = {
-        root_dir = root_proj_dir,
         build_dir = root_build_dir,
         local_dir = local_dir,
         path = function(...)
@@ -177,7 +177,17 @@ local include = function (relative_path)
             return path.join(root_build_dir, ...)
         end,
         glob = function(...)
-            return glob(path.join(local_dir, ...))
+            local results = glob(path.join(qualified_dir, ...))
+            local retval = {}
+            for _, part in ipairs(results) do
+                if part:sub(1, #qualified_dir) == qualified_dir then
+                    table.insert(retval, part:sub(#qualified_dir + 1))
+                else
+                    table.insert(retval, part)
+                end
+            end
+
+            return retval
         end,
     }
 

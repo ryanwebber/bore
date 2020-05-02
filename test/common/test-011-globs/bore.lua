@@ -5,9 +5,16 @@ if #files ~= 4 then
     error("Glob expected 4 files, but only got " .. #files)
 end
 
+local expected = {
+    ["files/d.e.txt"] = 1,
+    ["files/c.txt"] = 1,
+    ["files/b.txt"] = 1,
+    ["files/a.txt"] = 1
+}
+
 for _, f in pairs(files) do
-    if path.extension(f) ~= "txt" then
-        error("Expected .txt file matched by glob, but file was: " .. f)
+    if not expected[f] then
+        error("Unexpected file matched by glob: " .. f)
     end
 end
 

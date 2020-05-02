@@ -43,3 +43,7 @@ size_t path_filename(const char *path, const char **index) {
     return ext_pos - (*index) - 1;
 }
 
+size_t path_normalize(const char* path, char* buffer, size_t len) {
+    return cwk_path_normalize(path, buffer, len);
+}
+

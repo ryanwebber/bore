@@ -9,6 +9,7 @@ size_t path_dirname(const char *path, const char **index);
 size_t path_basename(const char *path, const char **index);
 size_t path_extension(const char *path, const char **index);
 size_t path_filename(const char *path, const char **index);
+size_t path_normalize(const char* path, char* buffer, size_t len);
 
 #endif
 
