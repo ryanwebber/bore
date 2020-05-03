@@ -21,14 +21,14 @@ A cross-platform build file generator for make and Ninja using templates written
     * [Environment](#environment)
  * [Examples](#examples)
  * [API Reference](#)
-    * [Variables](#)
+    * Variables
         * [`config`](#config)
         * [`env.build_dir`](#envbuild_dir)
         * [`env.local_dir`](#envlocal_dir)
         * [`rules`](#rules)
         * [`targets`](#targets)
 
-    * [Functions](#)
+    * Functions
         * [`env.glob()`](#envglobpattern)
         * [`env.object()`](#envobject)
         * [`env.path()`](#envpath)
@@ -288,7 +288,7 @@ target {
 ### C Executable
 This is an example which uses the `c` build rules that are included with Bore. These
 are just functions that return a `rule`, which is why you can use them like you would
-by calling [rule()](#ruleargs).
+by calling [rule(args)](#ruleargs).
 
 ```lua
 -- bore.lua

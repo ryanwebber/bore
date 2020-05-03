@@ -67,8 +67,8 @@ target {
     build = rule {
         ins = targets.bore.name,
         cmds = {
-            "install -d " .. path.join(prefix, bin),
-            "install -C ${ins} " .. path.join(prefix, bin)
+            "install -d " .. path.join(prefix, "bin"),
+            "install -C ${ins} " .. path.join(prefix, "bin")
         }
     }
 }
