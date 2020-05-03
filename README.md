@@ -71,13 +71,13 @@ Build templates are ordinary lua files with a few extra variables and functions 
 ### Example
 ```lua
 
-local outfile = module.path("outs/sorted.txt")
+local outfile = "outs/sorted.txt"
 
 target {
 	name = "bundle",
 	build = rule {
-		ins = module.glob("inputs/*.txt"),
-		outs = module.object("bundle.txt"),
+		ins = glob("inputs/*.txt"),
+		outs = "build/bundle.txt",
 		cmds = "cat ${ins} > ${outs}"
 	}
 }
@@ -86,7 +86,7 @@ target {
 	name = "sort",
 	default = true,
 	build = rule {
-		ins = targets.bundle.outs,
+		ins = targets["bundle"].outs,
 		outs = outfile,
 		cmds = "sort ${ins} > ${outs}"
 	}
@@ -100,3 +100,6 @@ When the build file is generated from this template, and the default target is r
  3. The `outs/` directory will be created (required by the `sort` target)
  4. The lines in `build/bundle.txt` will be sorted and dumped into `outs/sorted.txt`
 
+
+## License
+Bore is released under the [MIT License](https://opensource.org/licenses/MIT).
