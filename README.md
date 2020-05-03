@@ -100,6 +100,8 @@ When the build file is generated from this template, and the default target is r
  3. The `outs/` directory will be created (required by the `sort` target)
  4. The lines in `build/bundle.txt` will be sorted and dumped into `outs/sorted.txt`
 
+## Contributing
+Please do! Feel free to open a PR for any and all issues.
 
 ## License
 Bore is released under the [MIT License](https://opensource.org/licenses/MIT).
