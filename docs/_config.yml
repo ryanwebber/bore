@@ -4,7 +4,7 @@ description: >-
   A boring build file generator
 
 baseurl: ""
-url: "http://example.com"
+url: "https://ryanwebber.github.io/bore/"
 github_url:  "https://github.com/ryanwebber/bore"
 
 markdown: kramdown
