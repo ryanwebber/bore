@@ -11,7 +11,7 @@ static char err_buf[ERR_BUF_LEN];
 void error_fmt(struct Error **err, const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    vsprintf(err_buf, fmt, args);
+    vsnprintf(err_buf, ERR_BUF_LEN, fmt, args);
     va_end(args);
 
     struct Error *e = malloc(sizeof(struct Error));
