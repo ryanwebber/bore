@@ -15,6 +15,7 @@ __Features__
 
  * Easy out-of-source builds
  * Automatic directory creation dependencies
+ * Automatic help targets
  * File pattern matching (ex. `*.txt`)
 
 
@@ -99,80 +100,3 @@ When the build file is generated from this template, and the default target is r
  3. The `outs/` directory will be created (required by the `sort` target)
  4. The lines in `build/bundle.txt` will be sorted and dumped into `outs/sorted.txt`
 
-
-## API Reference 
-
-### `target({ args })`
-Define a new target. Lua syntax permits the developer to omit the brackets when calling a function with a table or string, so typically we omit them. The table passed to `target` describes how the target gets translated as build rules in the generated build files.
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `name` | `string` | The name of the target. Must be unique. __Required.__ |
-| `phony` | `boolean` | Whether the targt should be considered phony or not. Phony targets must not describe any outputs. |
-| `default` | `boolean` | Whether to include the target as part of the default build (ex. the `all` target in a Makefile, and as a default target in Ninja). |
-| `build` | `rule` | A rule that describes how to build this target. __Required.__ |
-
-
-### `rule({ args })`
-Create a new rule primative. Again, we typically omit the brackets. Calling `rule` returns a special type of lua object that is expected when creating targets. The table passed to `rule` describe the inputs, output files, output directories, and commands for the target. 
-
-| Parameter | Type | Description |
-| --- | --- | --- |
-| `ins` | `string`/`table` | A list of strings that represent the inputs to the target. |
-| `outs` | `string`/`table` | A list of strings that represent the outputs of the target. |
-| `dirs` | `string`/`table` | A list of strings that represent the directories required to be created before building the target can succeed. This typically is not explicitly set, and defaults to the directories of the `outs`. |
-| `cmds` | `string`/`table` | A list of strings that represent the commands to run to build the `outs` from the `ins`. Command strings are expanded with the provided `ins` and `outs` by the special tokens `${ins}` and `${outs}` respectively. |
-
-
-### `targets["<name>"]`
-Once a target has been created, it can then be referenced later on via the global `targets` table. This is useful for chaining the inputs of one target to the output of another:
-
-```lua
-target {
-	name = "first",
-	build = rule {
-		outs = "output.txt
-		cmds = "echo 'Hello World!' > ${outs}"
-	}
-}
-
-target {
-	name = "second",
-	phony = true,
-	build = rule {
-		ins = targets.first.outs,
-		cmds = "cat ${ins}"
-	}
-}
-```
-
-Target objects in the `targets` table will have the following properties:
-
- * `outs` - The target outputs
- * `ins` - The target inputs
- * `dirs` - The target dirs
- * `cmds` - The target cmds
- * `name` - The target name
- * `phony` - If the target is a phony target
- * `default` - If the target is a default target
-
-### `submodule("<path>")`
-The top level `bore.lua` is the root build module. Modules can define submodules by calling `submodule(...)`. This function will immediately load and evaluate the submodule, and make any targets defined in it available through the `targets` global.
-
-All modules have access to a global `module` object, that has several useful properties and functions. In fact, the only difference between modules is the state this object has.
-
-```lua
--- bore.lua
-
-submodule("other/build.lua")
-
-local dir = module.local_dir
-print(dir) -- ""
-```
-
-```lua
--- other/build.lua
-
-local dir = module.local_dir
-print(dir) -- "other"
-```
