@@ -25,6 +25,7 @@ A cross-platform build file generator for make and Ninja using templates written
         * [`config`](#config)
         * [`env.build_dir`](#envbuild_dir)
         * [`env.local_dir`](#envlocal_dir)
+        * [`platform.current`](#platformcurrent)
         * [`rules`](#rules)
         * [`targets`](#targets)
 
@@ -333,6 +334,13 @@ The specified out-of-source build directory for the project. Configured with `--
 ### [`env.local_dir`](#envlocal_dir)
 The directory of the current build template being evaluated, relative to the root project
 directory. For the root build template, this is just an empty string.
+
+### [`platform.current`](#platformcurrent)
+The current platform the build is being executed on. Is one of:
+ * `"macos"`
+ * `"linux"`
+ * `"windows"`
+ * `"unknown"`
 
 ### [`rules`](#rules)
 A table containing the system build rules. See [the list of build rules](#) for more details.

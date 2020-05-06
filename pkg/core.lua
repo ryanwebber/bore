@@ -294,7 +294,41 @@ local rules = {
     end
 }
 
+local cmd = {
+    capture = function (cmd, raw)
+        local f = assert(io.popen(cmd, 'r'))
+        local s = assert(f:read('*a'))
+        f:close()
+        if raw then return s end
+        s = string.gsub(s, '^%s+', '')
+        s = string.gsub(s, '%s+$', '')
+        s = string.gsub(s, '[\n\r]+', ' ')
+        return s
+    end
+}
+
+local get_platform = function()
+    local platform = cmd.capture("uname -s"):lower()
+    if platform == "darwin" then
+        return "macos"
+    elseif platform == "linux" then
+        return "linux"
+    elseif platform:find("^mingw") then
+        return "windows"
+    elseif platform:find("^cygwin") then
+        return "windows"
+    elseif platform:find("^msys") then
+        return "windows"
+    else
+        return "unknown"
+    end
+end
+
 local config = setmetatable(__bore.config, {})
+
+local platform = {
+    current = get_platform()
+}
 
 local assert = {
     string = assert_string,
@@ -321,11 +355,12 @@ local optional = {
 }
 
 local globals = {
+    config = config,
     include = include,
+    platform = platform,
+    rules = rules,
     target = target,
     targets = targets,
-    config = config,
-    rules = rules,
 }
 
 -- Update the global metatable to resolve the defined rules,
