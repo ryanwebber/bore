@@ -1,8 +1,9 @@
 
 local cc = "gcc"
 local cflags = "-g -Wall"
-local include = "-I include"
-local lib = "-llua -lm -ldl"
+local include = "-Iinclude -I/usr/local/include"
+local lib = "-L/usr/local/lib"
+local libs = "-llua -lm -ldl"
 
 local bin = env.path("bin")
 local build = env.object()
@@ -17,7 +18,7 @@ for _, source in pairs(env.glob("src/*.c")) do
         alias = false,
         build = c.obj {
             sources = source,
-            flags = { "-g", "-Wall", "-I " .. env.path("include") },
+            flags = { "-g", "-Wall", include },
             build_dir = env.object(),
         }
     }
@@ -30,36 +31,60 @@ target {
     alias = false,
     build = rule {
         ins = { env.path("pkg/core.lua"), env.glob("pkg/**/*.lua") },
-        outs = env.object("bundle.lua"),
+        outs = env.object("bndl.lua"),
         cmds = {
             "cat ${ins} > ${outs}"
         }
     }
 }
 
-target {
-    name = "luaEmbed",
-    alias = false,
-    build = rule {
-        ins = targets.luaBundle.outs,
-        outs = env.object("__lua_embed.o"),
-        cmds = {
-            "ld -r -b binary -o ${outs} ${ins}"
+if platform.current == "macos" then
+
+    target {
+        name = "bore",
+        default = true,
+        description = "Build the Bore executable",
+        build = rule {
+            ins = { obj_files, targets.luaBundle.outs },
+            outs = env.path("bin", "bore"),
+            cmds = string.format(
+                "%s %s -sectcreate __DATA __build_bndl_lua %s %s -o ${outs} %s",
+                cc,
+                lib,
+                targets.luaBundle.outs[1],
+                table.concat(obj_files, " "),
+                libs)
         }
     }
-}
 
-target {
-    name = "bore",
-    default = true,
-    description = "Build the Bore executable",
-    build = c.executable {
-        objects = { obj_files, targets.luaEmbed.outs },
-        binary = "bore",
-        libs = { "-llua", "-lm", "-ldl" },
-        bin_dir = env.path("bin"),
+else
+
+    target {
+        name = "luaEmbed",
+        alias = false,
+        build = rule {
+            ins = targets.luaBundle.outs,
+            outs = env.object("__lua_embed.o"),
+            cmds = {
+                "ld -r -b binary -o ${outs} ${ins}"
+            }
+        }
     }
-}
+
+    target {
+        name = "bore",
+        default = true,
+        description = "Build the Bore executable",
+        build = c.executable {
+            objects = { obj_files, targets.luaEmbed.outs },
+            binary = "bore",
+            cflags = { lib },
+            libs = libs,
+            bin_dir = env.path("bin"),
+        }
+    }
+
+end
 
 target {
     name = "install",

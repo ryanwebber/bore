@@ -54,7 +54,7 @@ Hello World!
 
 
 ## Installation
-There are currently no pre-built binaries, so bore must be built from scratch. It has minimal dependencies. The repository also has it's `build.ninja` file checked in so it can be built without an existing bore executable.
+There are currently no pre-built binaries, so bore must be built from scratch. It has minimal dependencies. The repository also has it's `build.ninja` file checked in so it can be built on linux machines without an existing bore executable.
 
 ```
 $ git clone git@github.com:ryanwebber/bore.git

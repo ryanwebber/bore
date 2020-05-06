@@ -54,7 +54,9 @@ rules.c = {
             ins = objects,
             outs = binary,
             cmds = string.format("%s %s ${ins} -o ${outs} %s",
-                cc, table.concat(flags, " "), table.concat(libs, " "))
+                cc,
+                table.concat(flags, " "),
+                table.concat(libs, " "))
         }
     end
 }
