@@ -40,7 +40,6 @@ A cross-platform build file generator for make and Ninja using templates written
         * [`path.filename()`](#pathfilenamepath)
         * [`path.join()`](#pathjoin)
         * [`rule()`](#ruleargs)
-        * [`submodule()`](#submodulepath)
         * [`target()`](#targetargs)
 
 
@@ -493,7 +492,7 @@ as build rules in the generated build files.
 | --- | --- | --- |
 | `name` | `string` | The name of the target. Must be unique. __Required.__ |
 | `description` | `string` | A description of the target. If a phony rule can be generated for this target, then it will appear in the help target along with this description. |
-| `phony` | `boolean` | Whether the targt should be considered phony or not. Phony targets must not describe any outputs. |
+| `phony` | `boolean` | Whether the target should be considered phony or not. Phony targets must not describe any outputs. |
 | `default` | `boolean` | Whether to include the target as part of the default build (ex. the `all` target in a Makefile, and as a default target in Ninja). |
 | `build` | `rule` | A rule that describes how to build this target. __Required.__ |
 

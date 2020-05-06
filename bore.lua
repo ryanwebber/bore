@@ -65,7 +65,7 @@ target {
     description = "Install Bore to " .. prefix,
     phony = true,
     build = rule {
-        ins = targets.bore.name,
+        ins = targets.bore.outs,
         cmds = {
             "install -d " .. path.join(prefix, "bin"),
             "install -C ${ins} " .. path.join(prefix, "bin")

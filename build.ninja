@@ -16,9 +16,9 @@ rule r__clean
 build clean: r__clean
 
 rule r__install
-  command = install -d /usr/local/bin && install -C bore /usr/local/bin
+  command = install -d /usr/local/bin && install -C bin/bore /usr/local/bin
 
-build install: r__install bore
+build install: r__install bin/bore
 
 build bore: phony bin/bore
 
