@@ -16,8 +16,8 @@ __Note:__ Bore is a tool written to address my own needs. It's not battle tested
 ### Features
 
  * Easy out-of-source builds
- * Automatic directory creation dependencies
- * Automatic help targets
+ * Automatic directory creation dependencies (for Make)
+ * Automatic help targets (for Make)
  * File pattern matching (ex. `*.txt`)
 
 

@@ -38,7 +38,7 @@ target {
     }
 }
 
-if platform.current == "macos" then
+if platform.current == "macos" and false then
 
     target {
         name = "bore",

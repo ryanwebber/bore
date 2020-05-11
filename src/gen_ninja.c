@@ -134,7 +134,6 @@ void ninja_generate(struct BuildGraph *graph, struct NinjaOpts *opts, struct Err
     tlist = graph->list;
     while (tlist != NULL) {
         const char *name = tlist->target->name;
-        struct List* tdirs = &tlist->target->rule->dirs;
         struct List* tins = &tlist->target->rule->inputs;
         struct List* touts = &tlist->target->rule->outputs;
         struct List* tcmds = &tlist->target->rule->commands;
@@ -170,23 +169,10 @@ void ninja_generate(struct BuildGraph *graph, struct NinjaOpts *opts, struct Err
             emit_ninja_rule_name(m, name);
             emit_ninja_list(m, tins);
 
-            if (!list_empty(tdirs)) {
-                fprintf(m, " |");
-                emit_ninja_list(m, tdirs);
-            }
-
             fprintf(m, "\n\n");
         }
 
         tlist = tlist->next;
-    }
-
-    // Fifth: Emit the directory targets
-    fprintf(m, "rule mkdir\n  command = mkdir -p $out\n");
-    dir = list_first(dirs.values);
-    while (dir != NULL) {
-        fprintf(m, "\nbuild %s: mkdir", dir->value);
-        dir = list_next(dir);
     }
 
     fprintf(m, "\n\n");
@@ -200,33 +186,6 @@ void ninja_generate(struct BuildGraph *graph, struct NinjaOpts *opts, struct Err
         }
 
         fprintf(m, "\n");
-    }
-
-    // Seventh: Emit the help rule
-    if (!sset_has(&phonys, "help") &&
-            !list_empty(phonys.values) &&
-            graph_dep_search(graph, "help") == NULL) {
-
-        sset_insert(&phonys, "help");
-        fprintf(m, "rule help\n command = ");
-        fprintf(m, "\techo \"Supported targets:\"");
-
-        struct ListNode *target = list_first(phonys.values);
-        while (target != NULL) {
-            struct Target* discovered = graph_get_target(graph, target->value);
-            if (discovered != NULL && discovered->description != NULL) {
-                fprintf(m, " && echo \"    %-30s%s\"", target->value, discovered->description);
-            } else if (discovered != NULL) {
-                fprintf(m, " && echo \"    %s\"", target->value);
-            } else if (strcmp(target->value, "all") == 0) {
-                fprintf(m, " && echo \"    %-30s%s\"", target->value, "Build the default targets");
-            }
-
-            target = list_next(target);
-        }
-
-        fprintf(m, "\n\n");
-        fprintf(m, "build help: help\n\n");
     }
 
     sset_free(&defaults);

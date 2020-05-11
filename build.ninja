@@ -23,125 +23,121 @@ build install: r__install bin/bore
 build bore: phony bin/bore
 
 rule r__bore
-  command = gcc -L/usr/local/lib -sectcreate __DATA __build_bndl_lua build/bndl.lua build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/gen_ninja.o build/gen_make.o build/gen_dot.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o -o bin/bore -llua -lm -ldl
+  command = gcc  build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/gen_ninja.o build/gen_make.o build/gen_dot.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o -o bin/bore -llua -lm -ldl
 
-build bin/bore: r__bore build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/gen_ninja.o build/gen_make.o build/gen_dot.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/bndl.lua | bin/
+build bin/bore: r__bore build/utils.o build/tstree.o build/target.o build/strset.o build/rule.o build/path.o build/main.o build/lua_runtime.o build/lua_path.o build/lua_fglob.o build/list.o build/keyvalues.o build/gen_ninja.o build/gen_make.o build/gen_dot.o build/fglob.o build/error.o build/cwalk.o build/build_graph.o build/argscan.o build/__lua_embed.o
+
+rule r__luaEmbed
+  command = ld -r -b binary -o build/__lua_embed.o build/bndl.lua
+
+build build/__lua_embed.o: r__luaEmbed build/bndl.lua
 
 rule r__luaBundle
   command = cat pkg/core.lua pkg/rules/c.lua > build/bndl.lua
 
-build build/bndl.lua: r__luaBundle pkg/core.lua pkg/rules/c.lua | build/
+build build/bndl.lua: r__luaBundle pkg/core.lua pkg/rules/c.lua
 
 rule r__c_src_argscan_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/argscan.o src/argscan.c
 
-build build/argscan.o: r__c_src_argscan_c src/argscan.c | build/
+build build/argscan.o: r__c_src_argscan_c src/argscan.c
 
 rule r__c_src_build_graph_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/build_graph.o src/build_graph.c
 
-build build/build_graph.o: r__c_src_build_graph_c src/build_graph.c | build/
+build build/build_graph.o: r__c_src_build_graph_c src/build_graph.c
 
 rule r__c_src_cwalk_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/cwalk.o src/cwalk.c
 
-build build/cwalk.o: r__c_src_cwalk_c src/cwalk.c | build/
+build build/cwalk.o: r__c_src_cwalk_c src/cwalk.c
 
 rule r__c_src_error_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/error.o src/error.c
 
-build build/error.o: r__c_src_error_c src/error.c | build/
+build build/error.o: r__c_src_error_c src/error.c
 
 rule r__c_src_fglob_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/fglob.o src/fglob.c
 
-build build/fglob.o: r__c_src_fglob_c src/fglob.c | build/
+build build/fglob.o: r__c_src_fglob_c src/fglob.c
 
 rule r__c_src_gen_dot_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/gen_dot.o src/gen_dot.c
 
-build build/gen_dot.o: r__c_src_gen_dot_c src/gen_dot.c | build/
+build build/gen_dot.o: r__c_src_gen_dot_c src/gen_dot.c
 
 rule r__c_src_gen_make_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/gen_make.o src/gen_make.c
 
-build build/gen_make.o: r__c_src_gen_make_c src/gen_make.c | build/
+build build/gen_make.o: r__c_src_gen_make_c src/gen_make.c
 
 rule r__c_src_gen_ninja_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/gen_ninja.o src/gen_ninja.c
 
-build build/gen_ninja.o: r__c_src_gen_ninja_c src/gen_ninja.c | build/
+build build/gen_ninja.o: r__c_src_gen_ninja_c src/gen_ninja.c
 
 rule r__c_src_keyvalues_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/keyvalues.o src/keyvalues.c
 
-build build/keyvalues.o: r__c_src_keyvalues_c src/keyvalues.c | build/
+build build/keyvalues.o: r__c_src_keyvalues_c src/keyvalues.c
 
 rule r__c_src_list_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/list.o src/list.c
 
-build build/list.o: r__c_src_list_c src/list.c | build/
+build build/list.o: r__c_src_list_c src/list.c
 
 rule r__c_src_lua_fglob_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/lua_fglob.o src/lua_fglob.c
 
-build build/lua_fglob.o: r__c_src_lua_fglob_c src/lua_fglob.c | build/
+build build/lua_fglob.o: r__c_src_lua_fglob_c src/lua_fglob.c
 
 rule r__c_src_lua_path_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/lua_path.o src/lua_path.c
 
-build build/lua_path.o: r__c_src_lua_path_c src/lua_path.c | build/
+build build/lua_path.o: r__c_src_lua_path_c src/lua_path.c
 
 rule r__c_src_lua_runtime_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/lua_runtime.o src/lua_runtime.c
 
-build build/lua_runtime.o: r__c_src_lua_runtime_c src/lua_runtime.c | build/
+build build/lua_runtime.o: r__c_src_lua_runtime_c src/lua_runtime.c
 
 rule r__c_src_main_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/main.o src/main.c
 
-build build/main.o: r__c_src_main_c src/main.c | build/
+build build/main.o: r__c_src_main_c src/main.c
 
 rule r__c_src_path_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/path.o src/path.c
 
-build build/path.o: r__c_src_path_c src/path.c | build/
+build build/path.o: r__c_src_path_c src/path.c
 
 rule r__c_src_rule_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/rule.o src/rule.c
 
-build build/rule.o: r__c_src_rule_c src/rule.c | build/
+build build/rule.o: r__c_src_rule_c src/rule.c
 
 rule r__c_src_strset_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/strset.o src/strset.c
 
-build build/strset.o: r__c_src_strset_c src/strset.c | build/
+build build/strset.o: r__c_src_strset_c src/strset.c
 
 rule r__c_src_target_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/target.o src/target.c
 
-build build/target.o: r__c_src_target_c src/target.c | build/
+build build/target.o: r__c_src_target_c src/target.c
 
 rule r__c_src_tstree_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/tstree.o src/tstree.c
 
-build build/tstree.o: r__c_src_tstree_c src/tstree.c | build/
+build build/tstree.o: r__c_src_tstree_c src/tstree.c
 
 rule r__c_src_utils_c
   command = gcc -g -Wall -Iinclude -I/usr/local/include -c -o build/utils.o src/utils.c
 
-build build/utils.o: r__c_src_utils_c src/utils.c | build/
+build build/utils.o: r__c_src_utils_c src/utils.c
 
-rule mkdir
-  command = mkdir -p $out
 
-build build/: mkdir
-build bin/: mkdir
 
 default bore
-
-rule help
- command = 	echo "Supported targets:" && echo "    bore                          Build the Bore executable" && echo "    install                       Install Bore to /usr/local" && echo "    clean                         Remove all build artifacts" && echo "    commontest                    Run the common test suite" && echo "    sanitytest                    Run the sanity tests" && echo "    test                          Run all tests"
-
-build help: help
 
