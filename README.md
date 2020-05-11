@@ -4,7 +4,7 @@ A cross-platform build file generator for make and Ninja using templates written
 
 Bore attempts to address some of pain points of writing raw build files (such as Makefiles and Ninja) without having to make the leap to learning complex build systems such as CMake, Meson, Gradle, etc. Writing build templates with bore should feel as simple and transparent as writing raw build files, but you get to do so in lua. You can learn pretty much everything about bore from just a couple of examples. For more information, read the [documentation](https://ryanwebber.github.io/bore/).
 
-__Note:__ Bore is a tool written to address my own needs. It's not battle tested, and probably contains some subtle bugs.
+__Disclaimer:__ Bore is a tool written to address my own needs. It's not battle tested, and probably contains some subtle bugs. It was built as a learning exercise and though well documented, is not expected to be used for building anything important.
 
 ### Supported Generators
 
